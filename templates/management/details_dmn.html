@@ -1,0 +1,10 @@
+{% extends "management/layout.html" %}
+
+{% block content %}
+  <p class="text-xl">Management view</p>
+  <p class="text-lg">Sync details for DMN.</p>
+  <p>Sync status (details) for all assets (hosts, services, rules, etc.) for DMN</p>
+  <p>Sync status is colored (sync, missed from Declared, missed from Actual, Chnaged)</br>
+    Click on asset to drill down</p>
+  {{ content | safe }}
+{% endblock content %}

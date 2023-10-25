@@ -1,0 +1,6 @@
+fastapi[all]
+pydantic
+pydantic-settings
+pyyaml
+
+pylint

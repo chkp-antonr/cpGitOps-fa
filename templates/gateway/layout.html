@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}
+Ticket | {{ title }}
+{% endblock title %}
+
+{% block sidenav %}
+  <ul class="px-2 space-y-4 text-gray-200 mt-4">
+    <li><a href={% url 'app_gateway:index' %} class="sidebar_menu_item text-xl">Gateway</a></li>
+    <li><a href="#" class="sidebar_menu_item">Add rule</a></li>
+  </ul>
+{% endblock sidenav %}
+
+
+{% block content %}
+{% endblock content %}

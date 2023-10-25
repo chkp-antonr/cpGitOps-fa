@@ -1,0 +1,12 @@
+{% extends "gateway/layout.html" %}
+
+{% block content %}
+
+  <p class="text-xl">Gateway details: <strong>{{ fqdn }}</strong></p>
+  <p class="text-lg text-gray-500">Info about sync state, options for sync... </p>
+  <hr class="my-2" />
+  <pre>
+  {{ content }}
+  </pre>
+
+{% endblock content %}

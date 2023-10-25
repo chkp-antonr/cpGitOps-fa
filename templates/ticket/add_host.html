@@ -1,0 +1,32 @@
+{% extends "ticket/layout.html" %}
+
+{% block content %}
+  <h1 class="mb-6 text-3xl text">Add host</h1>
+
+    <form method="post" action=".">
+        {% csrf_token %}
+        <div>
+          {% for field in form %}
+            <div class="form-group">
+              <p class="inline-block text-sm">{{field.label_tag}}</p>
+              {% if field.errors%}
+                {% for error in field.errors %}
+                  <div class="error_in_form">
+                      {{error}}
+                  </div>
+                {% endfor %}
+              {% endif %}
+              <div>{{field}}</div>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="error_in_form">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <button name="add-host" class="py-1 px-4 text-lg bg-teal-600 hover:bg-teal-800 rounded-xl text-white">Submit</button>
+    </form>
+{% endblock content %}

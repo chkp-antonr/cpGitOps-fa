@@ -1,0 +1,52 @@
+{% extends "management/layout.html" %}
+
+{% block content %}
+  <p class="text-xl">Management view</p>
+  <p class="text-lg">Configuration overview.</p>
+  <p>List of management servers, domains. </p>
+  <p>Refresh button to list statistics:
+    number of gateways per domain, policy packages (and gateways within them), hosts, networks, rules (access and NAT) </p>
+  <hr class="my-2" />
+  <pre class="text-xs">
+    {{ content }}
+  </pre>
+  <hr class="my-3" />
+
+   <style>
+    .cell {
+      padding-left: 1rem; /* 16px */
+      padding-right: 1rem;
+      border-width: 1px;
+    }
+  </style>
+
+  <table>
+    {% for item in mgmt_list %}
+    {#<p>{{ item }}</p>#}
+      {% for mdm_fqdn,value in item.items() %}
+        <tr class="text-left bg-slate-100 border">
+          <td colspan=7 class="pt-3 pb-1 px-4"><span class="font-semibold">{{ mdm_fqdn }}</span></td>
+        </tr>
+        <tr class="border bg-slate-50 py-2 font-thin font-mono">
+          <td class="cell">MDM name</td>
+          <td class="cell">IP</td>
+          <td class="cell">Version</td>
+          <td class="cell">JHF</td>
+          <td class="cell">Domains</td>
+          <td class="cell">Kind</td>
+          <td class="cell">Description</td>
+        </tr>
+        <tr>
+          <td class="cell">{{ value.__descr__.name }}</td>
+          <td class="cell">{{ value.__descr__.ipv4_address }}</td>
+          <td class="cell">{{ value.__descr__.version }}</td>
+          <td class="cell">{{ value.__descr__.JHF }}</td>
+          <td class="cell">{{ value.dmns|join(', ') }}</td>
+          <td class="cell">{{ value.__descr__.kind }}</td>
+          <td class="cell">{{ value.__descr__.description }}</td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+  </table>
+
+{% endblock content %}

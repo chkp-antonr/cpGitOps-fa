@@ -1,0 +1,10 @@
+{% extends "management/layout.html" %}
+
+{% block content %}
+  <p class="text-xl">Management view</p>
+  <p class="text-lg">Details on asset and its sync status</p>
+  <p>Diff for asset: missed from Declared, missed from Actual (new and deleted), Chnaged)</br>
+    Full view is available (json), compact (asset name and most important (changed from defaults) fields)</br>
+    Individual sync in any direction is poosible.</p>
+  {{ content | safe }}
+{% endblock content %}
