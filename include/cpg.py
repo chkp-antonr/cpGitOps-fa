@@ -15,6 +15,14 @@ router = APIRouter(
     tags=["CPG"]
 )
 
+class MyDumper(yaml.Dumper):
+    ''' Adds ident before "-"
+        yaml.dump(self.hosts_curr, Dumper=cpg.MyDumper,
+                  sort_keys=False, indent=2, default_flow_style=False)
+    '''
+    def increase_indent(self, flow=False, indentless=False):
+        return super(MyDumper, self).increase_indent(flow, False)
+
 
 #region Gateways
 def gateway_descr_by_fqdn(gw_fqdn) -> Dict:
@@ -62,10 +70,10 @@ def mgmt_descr_by_fqdn(mgmt_fqdn:str) -> sch.DescrManagement:
 
 
 @router.get("/list_mgmt_domains")
-def list_mgmt_domains() -> List[Dict]:
+def list_mgmt_domains() -> List[sch.ManagementDomainSingle]:
     """ Return List of management servers
-    [{"mdmPrime.il.cparch.in": {"__descr__": <__descr__.yaml>, dmns:[cpGitOps,<without Global>]},]
-    dmns = {} for SmartCenter
+    [{"fqdn": "mdmPrime.il.cparch.in", "__descr__": <__descr__.yaml>, dmns:[cpGitOps,<without Global>]},]
+    dmns = [] for SmartCenter
     """
 
     mgmt_domains_list = []
@@ -76,15 +84,14 @@ def list_mgmt_domains() -> List[Dict]:
         for dmn in os.listdir(mdm_path):
             if os.path.isdir(os.path.join(mdm_path, dmn)) and dmn != "Global":
                 dmns.append(dmn)
-        descr = mgmt_descr_by_fqdn(mdm_fqdn)['annotation']
-        mgmt_domain = {mdm_fqdn:
-            {
-                "__descr__": descr,
-                "dmns": dmns,
-            }
+        descr_file = mgmt_descr_by_fqdn(mdm_fqdn)
+        mgmt_domain = {
+            "fqdn": mdm_fqdn,
+            "descr_file": descr_file,
+            "dmns": dmns,
         }
         mgmt_domains_list.append(mgmt_domain)
-        # logger.debug(mgmt_domains_list)
+        logger.debug(f"\n{yaml.dump(mgmt_domains_list, indent=4, Dumper=MyDumper)}")
     return mgmt_domains_list # list_mgmt_domains
 
 #endregion Management

@@ -2,6 +2,7 @@ from typing import Dict, List
 from pydantic import BaseModel
 
 
+#region Management
 class DescrManagementDescription(BaseModel):
     """ description section of __descr__.yaml for the Management server / MDM """
     description: str
@@ -16,10 +17,8 @@ class DescrManagement(BaseModel):
     annotation: DescrManagementDescription
     credentials: Dict
 
-
 class ManagementDomainSingle(BaseModel):
-    __descr__: DescrManagementDescription
+    fqdn:   str
+    descr_file: DescrManagement
     dmns: List[str] = []
-
-class ManagementDomainsList(BaseModel):
-    element: List[Dict[str, ManagementDomainSingle]]
+#endregion Management

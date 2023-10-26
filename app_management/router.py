@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory="templates")
 @router.get("/")
 def index(request: Request):
     mgmt_list = cpg.list_mgmt_domains()
-    content = yaml.dump(mgmt_list, indent=4)
+    content = yaml.dump(mgmt_list, indent=4, Dumper=cpg.MyDumper)
     return templates.TemplateResponse(router.prefix+"/index.html", {
         "title":"Index",
         "mgmt_list": mgmt_list,

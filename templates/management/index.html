@@ -23,29 +23,27 @@
   <table>
     {% for item in mgmt_list %}
     {#<p>{{ item }}</p>#}
-      {% for mdm_fqdn,value in item.items() %}
-        <tr class="text-left bg-slate-100 border">
-          <td colspan=7 class="pt-3 pb-1 px-4"><span class="font-semibold">{{ mdm_fqdn }}</span></td>
-        </tr>
-        <tr class="border bg-slate-50 py-2 font-thin font-mono">
-          <td class="cell">MDM name</td>
-          <td class="cell">IP</td>
-          <td class="cell">Version</td>
-          <td class="cell">JHF</td>
-          <td class="cell">Domains</td>
-          <td class="cell">Kind</td>
-          <td class="cell">Description</td>
-        </tr>
-        <tr>
-          <td class="cell">{{ value.__descr__.name }}</td>
-          <td class="cell">{{ value.__descr__.ipv4_address }}</td>
-          <td class="cell">{{ value.__descr__.version }}</td>
-          <td class="cell">{{ value.__descr__.JHF }}</td>
-          <td class="cell">{{ value.dmns|join(', ') }}</td>
-          <td class="cell">{{ value.__descr__.kind }}</td>
-          <td class="cell">{{ value.__descr__.description }}</td>
-        </tr>
-      {% endfor %}
+      <tr class="text-left bg-slate-100 border">
+        <td colspan=7 class="pt-3 pb-1 px-4"><span class="font-semibold">{{ item.fqdn }}</span></td>
+      </tr>
+      <tr class="border bg-slate-50 py-2 font-thin font-mono">
+        <td class="cell">MDM name</td>
+        <td class="cell">IP</td>
+        <td class="cell">Version</td>
+        <td class="cell">JHF</td>
+        <td class="cell">Domains</td>
+        <td class="cell">Kind</td>
+        <td class="cell">Description</td>
+      </tr>
+      <tr>
+        <td class="cell">{{ item.descr_file.annotation.name }}</td>
+        <td class="cell">{{ item.descr_file.annotation.ipv4_address }}</td>
+        <td class="cell">{{ item.descr_file.annotation.version }}</td>
+        <td class="cell">{{ item.descr_file.annotation.JHF }}</td>
+        <td class="cell">{{ item.dmns|join(', ') }}</td>
+        <td class="cell">{{ item.descr_file.annotation.kind }}</td>
+        <td class="cell">{{ item.descr_file.annotation.description }}</td>
+      </tr>
     {% endfor %}
   </table>
 
