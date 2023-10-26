@@ -7,11 +7,6 @@
   <p>Refresh button to list statistics:
     number of gateways per domain, policy packages (and gateways within them), hosts, networks, rules (access and NAT) </p>
   <hr class="my-2" />
-  <pre class="text-xs">
-    {{ content }}
-  </pre>
-  <hr class="my-3" />
-
    <style>
     .cell {
       padding-left: 1rem; /* 16px */
@@ -46,5 +41,8 @@
       </tr>
     {% endfor %}
   </table>
-
+  <hr class="my-3" />
+  <pre class="text-xs text-gray">
+    {{ content }}
+  </pre>
 {% endblock content %}

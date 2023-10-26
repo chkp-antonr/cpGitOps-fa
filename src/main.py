@@ -4,11 +4,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
+#
 from include.cpg import router as router_cpg # to see in docs
 from app_management.router import router as router_management
 from app_ticket.router import router as router_ticket
-
 from include.cgl import logger, settings, prepare_logger
 # https://github1s.com/artemonsh/fastapi_course/blob/main/Lesson_12/src/main.py#L3
 
@@ -52,8 +51,8 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
-    allow_headers=["Content-Type", "Set-Cookie", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin",
-                   "Authorization"],
+    allow_headers=["Content-Type", "Set-Cookie", "Access-Control-Allow-Headers",
+                   "Access-Control-Allow-Origin", "Authorization"],
 )
 
 templates = Jinja2Templates(directory="templates")

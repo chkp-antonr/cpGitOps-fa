@@ -1,15 +1,16 @@
 """ GitOps-related module """
 
 import os
-from typing import Dict, List
+from typing import List
 import yaml
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 
 
 import src.schemas as sch
 # from include import cgl
-from include.cgl import logger, settings
+from include.cgl import settings #, logger
 
+#region
 router = APIRouter(
     prefix="/cpg",
     tags=["CPG"]
@@ -21,12 +22,17 @@ class MyDumper(yaml.Dumper):
                   sort_keys=False, indent=2, default_flow_style=False)
     '''
     def increase_indent(self, flow=False, indentless=False):
-        return super(MyDumper, self).increase_indent(flow, False)
+        return super().increase_indent(flow, False)
+        # return super(MyDumper, self).increase_indent(flow, False)
+
+#endregion
 
 
 #region Gateways
-def gateway_descr_by_fqdn(gw_fqdn) -> Dict:
-    """ Returns _descr_.yaml form gw_fqdn """
+@router.get("/gateway_descr_by_fqdn/{mgmt_fqdn}",
+            description="Returns _descr_.yaml for gw_fqdn")
+def gateway_descr_by_fqdn(gw_fqdn) -> sch.DescrGateway:
+    """ Returns _descr_.yaml for gw_fqdn """
 
     descr = {}
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_GW
@@ -38,25 +44,28 @@ def gateway_descr_by_fqdn(gw_fqdn) -> Dict:
         print(f"{f_descr} not found")
     return descr # gateway_descr_by_fqdn
 
-
-def list_gateways() -> List[Dict]:
+@router.get("/list_gateways",
+            description="List all gateways")
+def list_gateways() -> List[sch.GatewaySingle]:
     gw_descr_list = []
 
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_GW
     for path in os.listdir(dir_gw):
         if os.path.isdir(os.path.join(dir_gw, path)) and path != "Global":
-            descr = {"fqdn":path}
-            descr.update(gateway_descr_by_fqdn(path)['annotation'])
-            gw_descr_list.append(descr)
+            gw_descr_list.append({
+                "fqdn": path,
+                "descr_file": gateway_descr_by_fqdn(path),
+            })
     return gw_descr_list # list_gateways
 
 #endregion Gateways
 
-#region Management
 
-@router.get("/mgmt_descr_by_fqdn/{mgmt_fqdn}")
+#region Management
+@router.get("/mgmt_descr_by_fqdn/{mgmt_fqdn}",
+            description="Returns _descr_.yaml for mgmt_fqdn")
 def mgmt_descr_by_fqdn(mgmt_fqdn:str) -> sch.DescrManagement:
-    """ Returns _descr_.yaml form mgmt_fqdn """
+    """ Returns _descr_.yaml for mgmt_fqdn """
 
     descr = {}
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_MGMT
@@ -69,10 +78,12 @@ def mgmt_descr_by_fqdn(mgmt_fqdn:str) -> sch.DescrManagement:
     return descr # mgmt_descr_by_fqdn
 
 
-@router.get("/list_mgmt_domains")
+@router.get("/list_mgmt_domains",
+            description="List all management servers")
 def list_mgmt_domains() -> List[sch.ManagementDomainSingle]:
     """ Return List of management servers
-    [{"fqdn": "mdmPrime.il.cparch.in", "__descr__": <__descr__.yaml>, dmns:[cpGitOps,<without Global>]},]
+    [{"fqdn": "mdmPrime.il.cparch.in", "__descr__": <__descr__.yaml>,
+        dmns:[cpGitOps,<without Global>]},]
     dmns = [] for SmartCenter
     """
 
@@ -85,13 +96,11 @@ def list_mgmt_domains() -> List[sch.ManagementDomainSingle]:
             if os.path.isdir(os.path.join(mdm_path, dmn)) and dmn != "Global":
                 dmns.append(dmn)
         descr_file = mgmt_descr_by_fqdn(mdm_fqdn)
-        mgmt_domain = {
-            "fqdn": mdm_fqdn,
-            "descr_file": descr_file,
-            "dmns": dmns,
-        }
+        mgmt_domain = sch.ManagementDomainSingle(
+            fqdn=mdm_fqdn, descr_file=descr_file, dmns=dmns)
+        # logger.debug(mgmt_domain.model_dump(by_alias=True))
         mgmt_domains_list.append(mgmt_domain)
-        logger.debug(f"\n{yaml.dump(mgmt_domains_list, indent=4, Dumper=MyDumper)}")
+        # logger.debug(f"\n{yaml.dump(mgmt_domains_list, indent=4, Dumper=MyDumper)}")
     return mgmt_domains_list # list_mgmt_domains
 
 #endregion Management

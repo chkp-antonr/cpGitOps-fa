@@ -1,24 +1,46 @@
 from typing import Dict, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 #region Management
 class DescrManagementDescription(BaseModel):
-    """ description section of __descr__.yaml for the Management server / MDM """
+    """ Description section of __descr__.yaml for the Management server / MDM """
     description: str
     kind: str
     name: str
-    ipv4_address: str
+    ipv4_address: str = Field(serialization_alias='ipv4-address')
     version: str
-    JHF: str = ""
+    JHF: int = None
 
 class DescrManagement(BaseModel):
-    """ __descr__.yaml for the Management server / MDM """
+    """ Full __descr__.yaml for the Management server / MDM """
     annotation: DescrManagementDescription
     credentials: Dict
 
 class ManagementDomainSingle(BaseModel):
-    fqdn:   str
+    fqdn: str
     descr_file: DescrManagement
     dmns: List[str] = []
 #endregion Management
+
+#region Gateway
+class DescrGatewayDescription(BaseModel):
+    """ Description section of __descr__.yaml for Gateway """
+    description: str
+    kind: str
+    name: str
+    ipv4_address: str = Field(serialization_alias='ipv4-address')
+    mdm: str
+    dmn: str
+    version: str
+    JHF: int = None
+
+class DescrGateway(BaseModel):
+    """ Full __descr__.yaml for the Management server / MDM """
+    annotation: DescrManagementDescription
+    credentials: Dict
+
+class GatewaySingle(BaseModel):
+    fqdn:   str
+    descr_file: DescrGateway
+#endregion Gateway
