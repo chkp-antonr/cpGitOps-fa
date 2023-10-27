@@ -6,76 +6,57 @@
   <p class="text-lg">Some statistics</p>
   </p>How many gateways, of which versions...</p>
   <hr class="my-2" />
-  {% regroup content|dictsort:"mdm" by mdm as gw_list %}
 
-  {% comment %}
-  <div class="table">
-    {% for gw in gw_list %}
-    <div class="table-row table-fixed">
-      MDM: <span class="font-semibold">{{ gw.grouper }}</span>
-    </div>
-    {% for gw_value in gw.list|dictsort:"dmn" %}
-      {% if forloop.first %}
-      <div class="table-row px-4 hover:bg-blue-50 hover:cursor-pointer"
-        onclick='location.href="{% url 'app_gateway:index' %}";'>
-      <div id="Headers" class="font-mono">
-        <div class="cell">DMN</div>
-        <div class="cell">GW Name, FQDN</div>
-        <div class="cell">IP</div>
-        <div class="cell">Version</div>
-        <div class="cell">JHF</div>
-        <div class="cell">Kind</div>
-      </div>
+<style>
+  .cell {
+    padding-left: 1rem; /* 16px */
+    padding-right: 1rem;
+    border-width: 1px;
+  }
+</style>
+<table>
+  {% for mdm, value in gw_list | groupby('mdm') %}
+    <tr><td class="py-2"></td></tr>
+    <tr class="text-left bg-slate-100 border">
+      <td colspan=8 class="pt-3 pb-1 px-4">MDM: <span class="font-semibold">
+          {{ mdm }}</span></td>
+    </tr>
+    {% for dmn, gateways in value | groupby('dmn') %}
+      {% if not loop.first %}
+        <tr class="border"><td class="py-1" colspan=7></td></tr>
       {% endif %}
-      <div class="table-row px-4 hover:bg-blue-50 hover:cursor-pointer"
-        onclick='location.href="{% url 'app_gateway:index' %}";'>
-        <div class="cell">{{ gw_value.dmn }}</div>
-        <div class="cell">{{ gw_value.name }} <span class="font-thin">({{ gw_value.fqdn }})</span></div>
-        <div class="cell">{{ gw_value.ipv4_address }}</div>
-        <div class="cell">{{ gw_value.version }}</div>
-        <div class="cell">{{ gw_value.JHF }}</div>
-        <div class="cell">{{ gw_value.kind }}</div>
-      </div>
-  {% endfor %}
-
-    {% endfor %}
-  </div> {% endcomment %}
-
-  <style>
-    .cell {
-      padding-left: 1rem; /* 16px */
-      padding-right: 1rem;
-      border-width: 1px;
-    }
-  </style>
-
-  <table class="border-2 border-collapse rounded-lg w-full">
-    {% for gw in gw_list %}
-      <tr class="text-left bg-slate-100 border">
-        <td colspan="6" class="pt-4 pb-2 px-4">MDM: <span class="font-semibold">{{ gw.grouper }}</span></td>
+      <tr class="text-left bg-slate-50 border">
+        <td colspan=8 class="pt-1 pb-1 px-4">DMN: {{ dmn }}</td>
       </tr>
-      <tr class="border bg-slate-50 py-2 font-thin font-mono">
-        <td class="cell">DMN</td>
-        <td class="cell">GW name</td>
+      <tr class="border bg-slate-50 py-1 font-thin font-mono">
+        <td class="cell">Name</td>
+        <td class="cell">FQDN</td>
         <td class="cell">IP</td>
         <td class="cell">Version</td>
         <td class="cell">JHF</td>
         <td class="cell">Kind</td>
+        <td class="cell">Description</td>
       </tr>
-      {% for gw_value in gw.list|dictsort:"dmn" %}
-      <tr id="{{ gw_value.fqdn }}" class="hover:bg-blue-100 hover:cursor-pointer"
-         onclick='location.href="{% url 'app_gateway:gateway_by_fqdn' gw_value.fqdn %}";'>
-        <td class="cell">{{ gw_value.dmn }}</td>
-        <td class="cell">{{ gw_value.name }} <span class="font-thin">({{ gw_value.fqdn }})</span></td>
-        <td class="cell">{{ gw_value.ipv4_address }}</td>
-        <td class="cell">{{ gw_value.version }}</td>
-        <td class="cell">{{ gw_value.JHF }}</td>
-        <td class="cell">{{ gw_value.kind }}</td>
-      </tr>
+      {% for item in gateways %}
+        <tr>
+          <td class="cell">{{ item.descr_file.annotation.name }}</td>
+          <td class="cell font-thin">{{ item.fqdn }}</td>
+          <td class="cell">{{ item.descr_file.annotation.ipv4_address }}</td>
+          <td class="cell">{{ item.descr_file.annotation.version }}</td>
+          <td class="cell">{{ item.descr_file.annotation.JHF }}</td>
+          <td class="cell font-thin">{{ item.descr_file.annotation.kind }}</td>
+          <td class="cell font-thin">{{ item.descr_file.annotation.description }}</td>
+        </tr>
       {% endfor %}
     {% endfor %}
-  </table>
-  </hr>
-  <h2>-==-</h2>
+  {% endfor %}
+</table>
 
+{#
+  <hr class="my-3" />
+  <pre class="text-xs text-gray">
+{{ content }}
+  </pre>
+  <hr/>
+#}
 {% endblock content %}

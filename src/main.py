@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 #
 from include.cpg import router as router_cpg # to see in docs
+from app_gateway.router import router as router_gateway
 from app_management.router import router as router_management
 from app_ticket.router import router as router_ticket
 from include.cgl import logger, settings, prepare_logger
@@ -39,6 +40,7 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(router_cpg)
+app.include_router(router_gateway)
 app.include_router(router_management)
 app.include_router(router_ticket)
 

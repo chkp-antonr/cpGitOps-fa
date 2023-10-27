@@ -8,7 +8,7 @@ from fastapi import APIRouter
 
 import src.schemas as sch
 # from include import cgl
-from include.cgl import settings #, logger
+from include.cgl import settings, logger
 
 #region
 router = APIRouter(
@@ -42,7 +42,30 @@ def gateway_descr_by_fqdn(gw_fqdn) -> sch.DescrGateway:
             descr.update(yaml.safe_load(yaml_file))
     except FileNotFoundError:
         print(f"{f_descr} not found")
+    # logger.debug(descr)
     return descr # gateway_descr_by_fqdn
+
+
+@router.get("/gateway_by_name/{mgmt_server}/{dmn}/{name}",
+            description="Returns _descr_.yaml for gw by name")
+def gateway_by_name(mgmt_server, dmn, name) -> sch.GatewaySingle:
+    """ Returns fqdn + _descr_.yaml for gw by its name """
+
+    # for item in list_gateways():
+    #     gw = item.model_dump()
+    #     if gw['descr_file']['annotation']['mdm'] == mgmt_server \
+    #         and gw['descr_file']['annotation']['dmn'] == dmn \
+    #         and gw['descr_file']['annotation']['name'] == name:
+    #         logger.debug(item)
+    #         return item
+    gw = next((gw for gw in [item.model_dump() for item in list_gateways()] \
+              if gw['descr_file']['annotation']['mdm'] == mgmt_server
+            and gw['descr_file']['annotation']['dmn'] == dmn
+            and gw['descr_file']['annotation']['name'] == name), None
+            )
+    logger.debug(gw)
+    return gw # gateway_descr_by_fqdn
+
 
 @router.get("/list_gateways",
             description="List all gateways")
@@ -52,10 +75,10 @@ def list_gateways() -> List[sch.GatewaySingle]:
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_GW
     for path in os.listdir(dir_gw):
         if os.path.isdir(os.path.join(dir_gw, path)) and path != "Global":
-            gw_descr_list.append({
-                "fqdn": path,
-                "descr_file": gateway_descr_by_fqdn(path),
-            })
+            gw = sch.GatewaySingle(
+                fqdn=path, descr_file=gateway_descr_by_fqdn(path))
+            gw_descr_list.append(gw)
+            # logger.debug(gw)
     return gw_descr_list # list_gateways
 
 #endregion Gateways
