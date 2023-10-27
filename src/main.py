@@ -6,9 +6,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 #
 from include.cpg import router as router_cpg # to see in docs
-from app_gateway.router import router as router_gateway
-from app_management.router import router as router_management
-from app_ticket.router import router as router_ticket
+from app_gateway.gw_router import router as router_gateway
+from app_management.mgmt_router import router as router_management
+from app_ticket.tkt_router import router as router_ticket
 from include.cgl import logger, settings, prepare_logger
 # https://github1s.com/artemonsh/fastapi_course/blob/main/Lesson_12/src/main.py#L3
 

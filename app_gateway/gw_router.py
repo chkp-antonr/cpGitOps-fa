@@ -22,7 +22,7 @@ def index(request: Request):
     for item in gw_list:
         # logger.debug(item)
         temp_item = item.model_dump()
-        logger.debug(temp_item)
+        # logger.debug(temp_item)
         temp_item.update({
             "mdm": temp_item['descr_file']['annotation']['mdm'],
             "dmn": temp_item['descr_file']['annotation']['dmn'],
@@ -31,7 +31,7 @@ def index(request: Request):
     content = yaml.dump(
         [item.model_dump(by_alias=True) for item in gw_list],
         indent=4, Dumper=cpg.MyDumper)
-    logger.debug(content)
+    # logger.debug(content)
     return templates.TemplateResponse(router.prefix+"/index.html", {
         "title":"Index",
         "gw_list": gw_list_ext,
