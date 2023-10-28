@@ -95,15 +95,15 @@ def list_gateways() -> sch.ListOfGatewaySingle:
 def mgmt_descr_by_fqdn(mgmt_fqdn:str) -> sch.DescrManagement:
     """ Returns _descr_.yaml for mgmt_fqdn """
 
-    descr = {}
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_MGMT
     try:
         f_descr = os.path.join(dir_gw, mgmt_fqdn) + "/" + settings.FN_DESCR
         with open(f_descr, "r") as yaml_file:
-            descr.update(yaml.safe_load(yaml_file))
+            descr = yaml.safe_load(yaml_file)
     except FileNotFoundError:
         print(f"{f_descr} not found")
-    return descr # mgmt_descr_by_fqdn
+        return None
+    return sch.DescrManagement(**descr) # mgmt_descr_by_fqdn
 
 
 @router.get("/list_mgmt_domains",

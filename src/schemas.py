@@ -59,7 +59,18 @@ class ManagementLoginInfo(BaseModel):
     password: SecretStr = ""
     kind: str = ""
 
+class ManagementServerCachedInfo(BaseModel):
+    fqdn: str
+    name: str
+    server: str
+    # ToDo replace with credentials from pluginenvenv
+    api_key: SecretStr = ""
+    username: str = "_api_"
+    password: SecretStr = ""
+
+
 ListOfManagementServerSingle = List[ManagementServerSingle]
+ListOfManagementServerCachedInfo = List[ManagementServerCachedInfo]
 #endregion Management
 
 #region Etc

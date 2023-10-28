@@ -6,7 +6,8 @@ import yaml
 from cpapi import APIClient, APIClientArgs, APIResponse
 from .cgl import logger
 from .cpg import mgmt_descr_by_fqdn, MyDumper
-from src.schemas import ManagementLoginInfo, ApiStatus
+from src.schemas import ManagementLoginInfo, ManagementServerCachedInfo, \
+    ListOfManagementServerCachedInfo, ApiStatus
 
 # region GlobalsAndSettings
 DEFAULT_COLOR = "Crete Blue"  # for new objects if not specified
@@ -30,9 +31,10 @@ def get_mgmt_login_info(fqdn: str) -> ManagementLoginInfo:
 
     mgmt_login_info = ManagementLoginInfo(
         fqdn=fqdn,
-        name=mgmt_descr['annotation']['name'],
-        # name=mgmt_descr.annotation.name,
-        server=mgmt_descr['annotation']['ipv4_address'],
+        # name=mgmt_descr['annotation']['name'],
+        name=mgmt_descr.annotation.name,
+        # server=mgmt_descr['annotation']['ipv4_address'],
+        server=mgmt_descr.annotation.ipv4_address,
         # port: int = 443
         # ToDo replace with credentials from pluginenvenv
         api_key="attNU1d69sTjjZo3qRIIkg==",
@@ -44,9 +46,9 @@ def get_mgmt_login_info(fqdn: str) -> ManagementLoginInfo:
 #endregion Functions
 
 class Mgmt():
-    """ Management server with caching - sngleton """
+    """ Management server with caching - singleton """
     instance = None
-    mgmt_servers = []
+    mgmt_servers:ListOfManagementServerCachedInfo = []
 
     def __new__(cls, mgmt_login_info:ManagementLoginInfo):
         if cls.instance is None:
@@ -56,33 +58,41 @@ class Mgmt():
         return cls.instance  # return existing instance
 
     def __init__(self, mgmt_login_info:ManagementLoginInfo):
+        for s in self.mgmt_servers:
+            print(s.model_dump())
+        logger.info([s.model_dump() for s in self.mgmt_servers])
         match = next((server for server in self.mgmt_servers
-                      if server['fqdn'] == mgmt_login_info.fqdn), None)
+                      if server.fqdn == mgmt_login_info.fqdn), None)
+        logger.debug(match)
         if not match:
             logger.debug(f'Adding {mgmt_login_info}')
-            self.mgmt_servers.append({
-                "fqdn": mgmt_login_info.fqdn,
-                "name": mgmt_login_info.name,
-                # name=mgmt_descr.annotation.name,
-                "server": mgmt_login_info.server,
-                # port: int = 443
+            self.mgmt_servers.append(ManagementServerCachedInfo(
+                fqdn=mgmt_login_info.fqdn,
+                name=mgmt_login_info.name,
+                server=mgmt_login_info.server,
                 # ToDo replace with credentials from pluginenvenv
-                "api_key": "attNU1d69sTjjZo3qRIIkg==",
-                "username": "_api_",
+                api_key="attNU1d69sTjjZo3qRIIkg==",
+                # "username": "_api_",
                 # password: str = ""
-            })
+                kind=mgmt_login_info.kind
+             ))
         # logger.error(self.mgmt_servers)
-        return # return existing instance
+        return # __init__
 
-    def login(self, mgmt_server:{}, unsafe_auto_accept=True) -> ApiStatus:
+    def login(self, mgmt_server:ManagementServerCachedInfo, unsafe_auto_accept=True) -> ApiStatus:
         """ Login to SMS or DMN if not logged
 
         :param Dict mgmt_server: _description_
         :param bool unsafe_auto_accept: ignore fingerprint check, defaults to True
         :return _type_: success code
         """
+
+        server_ip = mgmt_server.server
+        match = next((server for server in self.mgmt_servers
+                      if server.fqdn == server_ip), None)
+
         client_args = APIClientArgs(
-            server=mgmt_server['server'], unsafe_auto_accept=unsafe_auto_accept, http_debug_level=HTTP_DEBUG_LEVEL)
+            server=server_ip, unsafe_auto_accept=unsafe_auto_accept, http_debug_level=HTTP_DEBUG_LEVEL)
 
         client = APIClient(client_args)
         if client.check_fingerprint() is False:
@@ -92,22 +102,22 @@ class Mgmt():
                         "Could not get the server's fingerprint",
                         "nCheck connectivity with the server.")
 
-        res = client.api_call("show-api-versions")
+        res = client.api_call("login")
         logger.debug(res)
 
         res = client.api_call("show-api-versions")
         logger.debug(res)
         # logger.debug(f"\n{yaml.dump(res, indent=4, Dumper=MyDumper)}")
-        return ApiStatus(comment=f"Mgmt: {mgmt_server['name']}") # login
+        return ApiStatus(comment=f"Mgmt: {mgmt_server.name}") # login
 
 
     def api_cli(self, mgmt:str, command:str, params = {}, dmn=""):
         """ by mdm_name, if not found try as fqdn """
         mgmt_server = next((server for server in self.mgmt_servers
-                      if server['name'] == mgmt), None)
+                      if server.name == mgmt), None)
         if not mgmt_server:
             mgmt_server = next((server for server in self.mgmt_servers
-                        if server['fqdn'] == mgmt), None)
+                        if server.fqdn == mgmt), None)
         if not mgmt_server:
             logger.critical(f"Mgmt class not initialized for {mgmt}")
             return {"status_code": 401, "mgmt":mgmt}
