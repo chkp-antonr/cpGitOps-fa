@@ -20,11 +20,10 @@ def index(request: Request):
     gw_list = cpg.list_gateways()
     gw_list_ext = []
     for item in gw_list:
-        # logger.debug(item)
         temp_item = item.model_dump()
-        # logger.debug(temp_item)
+        # Additional fields for easier processing in the template
         temp_item.update({
-            "mdm": temp_item['descr_file']['annotation']['mdm'],
+            "mgmt_name": temp_item['descr_file']['annotation']['mgmt_name'],
             "dmn": temp_item['descr_file']['annotation']['dmn'],
         })
         gw_list_ext.append(temp_item)

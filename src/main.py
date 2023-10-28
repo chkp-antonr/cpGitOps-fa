@@ -5,6 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 #
+# from fastapi.responses import PlainTextResponse
+# from starlette.exceptions import HTTPException as StarletteHTTPException
+# from starlette.background import BackgroundTask
+# import asyncio
+#
 from include.cpg import router as router_cpg # to see in docs
 from app_gateway.gw_router import router as router_gateway
 from app_management.mgmt_router import router as router_management
@@ -59,8 +64,38 @@ app.add_middleware(
 
 templates = Jinja2Templates(directory="templates")
 
+# async def exit_app():
+#     loop = asyncio.get_running_loop()
+#     loop.stop()
+
+# @app.exception_handler(StarletteHTTPException)
+# async def http_exception_handler(request, exc):
+#     task = BackgroundTask(exit_app)
+#     return PlainTextResponse(str(exc.detail), status_code=exc.status_code, background=task)
+
+
 @app.get("/")
 def index(request: Request):
+
+    # for tests
+    from include import cpf
+    mgmt_login_info = cpf.get_mgmt_login_info('mdmPrime.il.cparch.in')
+    mdm = mgmt_login_info.fqdn
+    logger.debug(mgmt_login_info)
+    mgmt = cpf.Mgmt(mgmt_login_info)
+    logger.debug(mgmt)
+    res = mgmt.api_cli(mdm, "show-api-versions")
+    logger.debug(res)
+
+    # res = mgmt.api_cli("mdm", "show-api-versions")
+    # logger.debug(res)
+    # mgmt = cpf.Mgmt(mgmt_login_info)
+    # logger.debug(mgmt)
+
+    # raise HTTPException(status_code=500, detail='Need to restart')
+
+    content = res
     return templates.TemplateResponse("index.html", {
         "title":"Main page",
+        "content": content,
         "request": request})

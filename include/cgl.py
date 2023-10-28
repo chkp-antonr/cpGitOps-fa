@@ -28,14 +28,6 @@ class Base(BaseSettings):
         case_sensitive = False
         env_file = '.env' # This is the key factor
 
-class Dev(Base):
-    # username = "TRIPATHI"
-
-    class Config:
-        case_sensitive = False
-        env_file = 'dev.env'
-
-
 class Prod(Base):
     # username = "Production"
     # port = 5051
@@ -43,12 +35,27 @@ class Prod(Base):
     class Config:
         env_file = 'prod.env'
 
+class Dev(Base):
+    # username = "TRIPATHI"
+
+    class Config:
+        case_sensitive = False
+        env_file = 'dev.env'
+
+class Test(Base):
+    DIR_SSOT: str = "../SSoT-test"
+
+    class Config:
+        case_sensitive = False
+        env_file = 'dev.env'
+
 
 config = dict(
     dev=Dev,
-    prod=Prod
+    prod=Prod,
+    test=Test,
 )
-settings: Union[Dev, Prod] = config[os.environ.get('ENV', 'dev').lower()]()
+settings: Union[Dev, Prod, Test] = config[os.environ.get('ENV', 'dev').lower()]()
 #endregion Settings
 
 #region Logging

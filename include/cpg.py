@@ -34,21 +34,21 @@ class MyDumper(yaml.Dumper):
 def gateway_descr_by_fqdn(gw_fqdn) -> sch.DescrGateway:
     """ Returns _descr_.yaml for gw_fqdn """
 
-    descr = {}
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_GW
     try:
         f_descr = os.path.join(dir_gw, gw_fqdn) + "/" + settings.FN_DESCR
         with open(f_descr, "r") as yaml_file:
-            descr.update(yaml.safe_load(yaml_file))
+            descr = yaml.safe_load(yaml_file)
     except FileNotFoundError:
         print(f"{f_descr} not found")
-    # logger.debug(descr)
-    return descr # gateway_descr_by_fqdn
+        return None
+    # t = sch.DescrGateway(descr)
+    return sch.DescrGateway(**descr) # gateway_descr_by_fqdn
 
 
 @router.get("/gateway_by_name/{mgmt_server}/{dmn}/{name}",
             description="Returns _descr_.yaml for gw by name")
-def gateway_by_name(mgmt_server, dmn, name) -> sch.GatewaySingle:
+def gateway_by_name(mgmt_name, dmn, name) -> sch.GatewaySingle:
     """ Returns fqdn + _descr_.yaml for gw by its name """
 
     # for item in list_gateways():
@@ -58,18 +58,23 @@ def gateway_by_name(mgmt_server, dmn, name) -> sch.GatewaySingle:
     #         and gw['descr_file']['annotation']['name'] == name:
     #         logger.debug(item)
     #         return item
-    gw = next((gw for gw in [item.model_dump() for item in list_gateways()] \
-              if gw['descr_file']['annotation']['mdm'] == mgmt_server
-            and gw['descr_file']['annotation']['dmn'] == dmn
-            and gw['descr_file']['annotation']['name'] == name), None
+    gw = next((gw for gw in list_gateways() \
+              if gw.descr_file.annotation.mgmt_name == mgmt_name
+            and gw.descr_file.annotation.dmn == dmn
+            and gw.descr_file.annotation.name == name), None
             )
-    logger.debug(gw)
+    # gw = next((gw for gw in [item.model_dump() for item in list_gateways()] \
+    #           if gw['descr_file']['annotation']['mgmt_name'] == mgmt_name
+    #         and gw['descr_file']['annotation']['dmn'] == dmn
+    #         and gw['descr_file']['annotation']['name'] == name), None
+    #         )
+    # logger.debug(gw)
     return gw # gateway_descr_by_fqdn
 
 
 @router.get("/list_gateways",
             description="List all gateways")
-def list_gateways() -> List[sch.GatewaySingle]:
+def list_gateways() -> sch.ListOfGatewaySingle:
     gw_descr_list = []
 
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_GW
@@ -103,7 +108,7 @@ def mgmt_descr_by_fqdn(mgmt_fqdn:str) -> sch.DescrManagement:
 
 @router.get("/list_mgmt_domains",
             description="List all management servers")
-def list_mgmt_domains() -> List[sch.ManagementDomainSingle]:
+def list_mgmt_domains() -> sch.ListOfManagementServerSingle:
     """ Return List of management servers
     [{"fqdn": "mdmPrime.il.cparch.in", "__descr__": <__descr__.yaml>,
         dmns:[cpGitOps,<without Global>]},]
@@ -119,7 +124,7 @@ def list_mgmt_domains() -> List[sch.ManagementDomainSingle]:
             if os.path.isdir(os.path.join(mdm_path, dmn)) and dmn != "Global":
                 dmns.append(dmn)
         descr_file = mgmt_descr_by_fqdn(mdm_fqdn)
-        mgmt_domain = sch.ManagementDomainSingle(
+        mgmt_domain = sch.ManagementServerSingle(
             fqdn=mdm_fqdn, descr_file=descr_file, dmns=dmns)
         # logger.debug(mgmt_domain.model_dump(by_alias=True))
         mgmt_domains_list.append(mgmt_domain)

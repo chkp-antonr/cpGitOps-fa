@@ -2,5 +2,7 @@ fastapi[all]
 pydantic
 pydantic-settings
 pyyaml
-
 pylint
+pytest-env
+
+cp-mgmt-api-sdk

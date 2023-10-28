@@ -15,11 +15,11 @@
   }
 </style>
 <table>
-  {% for mdm, value in gw_list | groupby('mdm') %}
+  {% for mgmt_name, value in gw_list | groupby('mgmt_name') %}
     <tr><td class="py-2"></td></tr>
     <tr class="text-left bg-slate-100 border">
-      <td colspan=8 class="pt-3 pb-1 px-4">MDM: <span class="font-semibold">
-          {{ mdm }}</span></td>
+      <td colspan=8 class="pt-3 pb-1 px-4">Mgmt: <span class="font-semibold">
+          {{ mgmt_name }}</span></td>
     </tr>
     {% for dmn, gateways in value | groupby('dmn') %}
       {% if not loop.first %}
