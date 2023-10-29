@@ -1,7 +1,7 @@
 from typing import Dict, List, Literal
 from pydantic import BaseModel, Field, SecretStr
 # from dataclasses import dataclass
-
+from cpapi import APIClient
 
 #region Gateway
 class DescrGatewayDescription(BaseModel):
@@ -49,28 +49,29 @@ class ManagementServerSingle(BaseModel):
     descr_file: DescrManagement
     dmns: List[str] = []
 
-class ManagementLoginInfo(BaseModel):
+class ManagementServerCachedInfo(BaseModel):
     fqdn: str
     name: str
-    server: str
+    server_ip: str
     port: int = 443
     api_key: SecretStr = ""
     username: str = ""
     password: SecretStr = ""
     kind: str = ""
 
-class ManagementServerCachedInfo(BaseModel):
-    fqdn: str
-    name: str
-    server: str
-    # ToDo replace with credentials from pluginenvenv
-    api_key: SecretStr = ""
-    username: str = "_api_"
-    password: SecretStr = ""
+class ManagementToLogin(BaseModel):
+    """fqdn|name, [dmn], [cached client]"""
+    fqdn: str = ""
+    name: str = ""
+    dmn: str = ""
+    client: APIClient = None
 
+    class Config:
+        arbitrary_types_allowed = True
 
 ListOfManagementServerSingle = List[ManagementServerSingle]
 ListOfManagementServerCachedInfo = List[ManagementServerCachedInfo]
+ListOfManagementLoginInfo = List[ManagementToLogin]
 #endregion Management
 
 #region Etc

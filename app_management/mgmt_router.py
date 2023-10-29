@@ -14,7 +14,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/")
-def index(request: Request):
+def mgmt_index(request: Request):
     mgmt_list = cpg.list_mgmt_domains()
     content = yaml.dump(
         [item.model_dump(by_alias=True) for item in mgmt_list],
@@ -27,15 +27,20 @@ def index(request: Request):
 
 
 @router.get("/dashboard")
-def dashboard(request: Request):
+def mgmt_dashboard(request: Request):
     return templates.TemplateResponse(router.prefix+"/dashboard.html", {
         "title":"Dashboard",
         "request": request})
 
+@router.get("/show_domains")
+@router.get("/show_domains/{mgmt}")
+def mgmt_show_domains(request: Request, mgmt = None):
+    content = f"{mgmt}"
 
-# def dashboard(request):
-#     print(cgl.GLOBVAR().myvar)
-#     return render(request, "management/dashboard.html", {"title":"Dashboard"})
+    return templates.TemplateResponse(router.prefix+"/show_domains.html", {
+        "title":"Show domains",
+        "content": content,
+        "request": request})
 
 
 # def details_dmn(request, mgmt_server, dmn):

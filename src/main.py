@@ -76,25 +76,35 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
 def index(request: Request):
+    content = "Main page"
+    # # for tests
+    # from src import schemas as sch
+    # from include import cpf
+    # mgmt_server_info = cpf.get_mgmt_server_login_info('mdmPrime.il.cparch.in')
+    # mdm_name = mgmt_server_info.name
+    # mgmt = cpf.Mgmt(mgmt_server_info)
+    # status, client = mgmt.login(sch.ManagementToLogin(name=mdm_name, dmn="cpGitOps"))
+    # # res = client.api_call("show-api-versions")
+    # # logger.debug(cpf.strip_res_obj(res))
+    # # print("for domain")
+    # # client = mgmt.login(sch.ManagementToLogin(name=mdm_name, dmn="cpGitOps"))[1]
+    # # res = client.api_call("show-api-versions")
+    # # logger.debug(cpf.strip_res_obj(res))
 
-    # for tests
-    from include import cpf
-    mgmt_login_info = cpf.get_mgmt_login_info('mdmPrime.il.cparch.in')
-    mdm = mgmt_login_info.fqdn
-    logger.debug(mgmt_login_info)
-    mgmt = cpf.Mgmt(mgmt_login_info)
-    logger.debug(mgmt)
-    res = mgmt.api_cli(mdm, "show-api-versions")
-    logger.debug(res)
+    # client = mgmt.login(sch.ManagementToLogin(name=mdm_name, dmn="System Data"))[1]
+    # res = client.api_call("show-domains",
+    #         {
+    #         "limit" : 50,
+    #         "offset" : 0,
+    #         "details-level" : "standard",
+    #         })
+    # logger.debug([(domain, res.data[domain]) for domain in res.data])
 
-    # res = mgmt.api_cli("mdm", "show-api-versions")
-    # logger.debug(res)
-    # mgmt = cpf.Mgmt(mgmt_login_info)
-    # logger.debug(mgmt)
+    # content = cpf.strip_res_obj(res)
 
-    # raise HTTPException(status_code=500, detail='Need to restart')
+    # res = client.api_call("show-domain",{"name" : "cpGitOps",})
+    # logger.info(cpf.strip_res_obj(res))
 
-    content = res
     return templates.TemplateResponse("index.html", {
         "title":"Main page",
         "content": content,
