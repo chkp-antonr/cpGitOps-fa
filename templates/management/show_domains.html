@@ -3,24 +3,34 @@
 {% block content %}
   <p class="text-xl">Management view</p>
   <p class="text-lg">Show domains.</p>
-  <p>List of domains</br>
-    Filters per management servers. Allow to update SSoT.</p>
 
   <hr class="my-2"/>
   <div class="">
-    <label for="mgmt_server" class="text-sm px-1">Select Management server to refresh its domains:</label>
-    <select id="mgmt_server" class="py-1 px-1 border">
+    <div class="inline-block mr-5">
+      <label for="mgmt_server" class="text-sm leading-none">Select Management server<br/>to refresh its domains:</label>
+    </div>
+    <select id="mgmt_server" class="px-2 py-1 border-2 shadow-md inline-block">
       <option value="">Select server</option>
       {% for server in mgmt_servers %}
       <option value="{{ request.path }}?mgmt_server={{ server }}"
         {% if mgmt_server %}selected{% endif %}>{{ server }}</option>
       {% endfor %}
     </select>
+    <a href="#" class="button" onclick="update_ssot(this, 'update_ssot')">Update SSoT</a>
+    <button name="update_ssot" class="button" onclick="update_ssot(this, 'update_ssot')">Update SSoT</button>
   </div>
 
 <script>
-  document.getElementById("mgmt_server").addEventListener('change', function () {
+  function update_ssot(element, action) {
     const baseUrl = window.location.origin; // Get the base URL
+    const selectedValue = document.getElementById("mgmt_server").value;
+    if (selectedValue) {
+      const newUrl = `${selectedValue}&action=${action}`;
+      window.location.href = newUrl;
+    }
+  };
+  document.getElementById("mgmt_server").addEventListener('change', function () {
+    const baseUrl = window.location.pathname; // Get the base URL
     const selectedValue = this.value;
     if (selectedValue) {
       const newUrl = `${selectedValue}`;
@@ -30,7 +40,30 @@
 </script>
 
   <hr class="my-2" />
-{{ content|safe }}
+  {{ content|safe }}
+  <hr class="my-2" />
+
+  {% if update_ssot_result.dirs_created %}
+    <div class="my-2">
+      <h3>Created directories:</h3>
+      <ul class="font-mono">
+        {% for item in update_ssot_result.dirs_created %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if update_ssot_result.dirs_not_created %}
+  <div class="my-2">
+    <h3>Failed creating directories:</h3>
+    <ul class="font-mono">
+      {% for item in update_ssot_result.dirs_not_created %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
 
 {#
   <pre>

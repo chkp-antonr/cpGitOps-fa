@@ -34,7 +34,7 @@ def mgmt_dashboard(request: Request):
         "request": request})
 
 @router.get("/show_domains/")
-def mgmt_show_domains(request: Request, mgmt_server = None):
+def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
     logger.debug(request.url.path)
     list_domains = cpg.list_mgmt_domains()
     mgmt_servers = [server.descr_file.annotation.name for server in list_domains
@@ -48,10 +48,16 @@ def mgmt_show_domains(request: Request, mgmt_server = None):
             content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
                       f"<p>Domains on MDM: {domains}</p>"
 
+    update_ssot_result = {}
+    if action == "update_ssot":
+        logger.warning("Update SSoT")
+        update_ssot_result = cpf.update_ssot_mgmt_domains(mgmt_server)
+
     return templates.TemplateResponse(router.prefix+"/show_domains.html", {
         "title": "Show domains",
         "mgmt_servers": mgmt_servers,
         "mgmt_server": mgmt_server,
+        "update_ssot_result": update_ssot_result,
         "content": content,
         "request": request,
     })

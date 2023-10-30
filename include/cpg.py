@@ -7,7 +7,6 @@ from fastapi import APIRouter
 
 
 import src.schemas as sch
-# from include import cgl
 from include.cgl import settings, logger
 
 #region

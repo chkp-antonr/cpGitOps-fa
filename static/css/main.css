@@ -67,3 +67,23 @@ a.sidebar_menu_item:hover {
     border-radius: 0.25rem;
 
 }
+
+/* general */
+.button {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    --tw-bg-opacity: 1;
+    background-color: rgb(13 148 136 / var(--tw-bg-opacity));
+    border-radius: 0.75rem;
+    --tw-text-opacity: 1;
+    color: rgb(255 255 255 / var(--tw-text-opacity));
+}
+
+.button:hover {
+    --tw-bg-opacity: 1;
+    background-color: rgb(17 94 89 / var(--tw-bg-opacity));
+}

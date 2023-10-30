@@ -11,6 +11,7 @@ from fastapi.templating import Jinja2Templates
 # import asyncio
 #
 from include.cpg import router as router_cpg # to see in docs
+from include.cpf import router as router_cpf # to see in docs
 from app_gateway.gw_router import router as router_gateway
 from app_management.mgmt_router import router as router_management
 from app_ticket.tkt_router import router as router_ticket
@@ -44,6 +45,7 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+app.include_router(router_cpf)
 app.include_router(router_cpg)
 app.include_router(router_gateway)
 app.include_router(router_management)
