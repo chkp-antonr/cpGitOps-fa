@@ -80,30 +80,9 @@ def index(request: Request):
     # # for tests
     # from src import schemas as sch
     # from include import cpf
-    # mgmt_server_info = cpf.get_mgmt_server_login_info('mdmPrime.il.cparch.in')
-    # mdm_name = mgmt_server_info.name
-    # mgmt = cpf.Mgmt(mgmt_server_info)
-    # status, client = mgmt.login(sch.ManagementToLogin(name=mdm_name, dmn="cpGitOps"))
-    # # res = client.api_call("show-api-versions")
-    # # logger.debug(cpf.strip_res_obj(res))
-    # # print("for domain")
-    # # client = mgmt.login(sch.ManagementToLogin(name=mdm_name, dmn="cpGitOps"))[1]
-    # # res = client.api_call("show-api-versions")
-    # # logger.debug(cpf.strip_res_obj(res))
-
-    # client = mgmt.login(sch.ManagementToLogin(name=mdm_name, dmn="System Data"))[1]
-    # res = client.api_call("show-domains",
-    #         {
-    #         "limit" : 50,
-    #         "offset" : 0,
-    #         "details-level" : "standard",
-    #         })
-    # logger.debug([(domain, res.data[domain]) for domain in res.data])
-
-    # content = cpf.strip_res_obj(res)
-
-    # res = client.api_call("show-domain",{"name" : "cpGitOps",})
-    # logger.info(cpf.strip_res_obj(res))
+    # status, client = cpf.MgmtL().login(sch.ManagementToLogin(name="mdmPrime", dmn="cpGitOps"))
+    # content=status
+    # logger.debug(status)
 
     return templates.TemplateResponse("index.html", {
         "title":"Main page",

@@ -41,6 +41,7 @@ class DescrManagementDescription(BaseModel):
 
 class DescrManagement(BaseModel):
     """ Full __descr__.yaml for the Management server / MDM """
+
     annotation: DescrManagementDescription
     credentials: Dict = []
 
@@ -58,6 +59,11 @@ class ManagementServerCachedInfo(BaseModel):
     username: str = ""
     password: SecretStr = ""
     kind: str = ""
+    dmn: str = ""
+    client: APIClient = None
+
+    class Config:
+        arbitrary_types_allowed = True
 
 class ManagementToLogin(BaseModel):
     """fqdn|name, [dmn], [cached client]"""
@@ -71,7 +77,7 @@ class ManagementToLogin(BaseModel):
 
 ListOfManagementServerSingle = List[ManagementServerSingle]
 ListOfManagementServerCachedInfo = List[ManagementServerCachedInfo]
-ListOfManagementLoginInfo = List[ManagementToLogin]
+# ListOfManagementLoginInfo = List[ManagementToLogin]
 #endregion Management
 
 #region Etc

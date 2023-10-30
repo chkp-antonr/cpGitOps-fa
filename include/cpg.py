@@ -143,4 +143,18 @@ def mgmt_get_fqdn_by_name(mgmt_name) -> str:
             return mdm_fqdn
     return None # mgmt_descr_by_fqdn
 
+def mgmt_get_fqdn(fqdn:str="", name:str="", ) -> str:
+    """ Returns FQDN for the management server
+    if fqdn contains "." - return it as FQDN
+    if fqdn is empty use name
+    if fqdn doesn't contain "." consider it as name
+    """
+
+    if "." in fqdn:
+        return fqdn
+    if fqdn: # consider as name
+        return mgmt_get_fqdn_by_name(fqdn)
+    else:
+        return mgmt_get_fqdn_by_name(name)
+    return None # mgmt_get_fqdn
 #endregion Management
