@@ -35,16 +35,17 @@ def index(request: Request):
         "title":"Index",
         "gw_list": gw_list_ext,
         "content": content,
-        "request": request})
+        "request": request
+    })
 
 
 @router.get("/{mgmt_server}/{dmn}/{name}")
-def details(request:Request, mgmt_server, dmn, name):
+def gw_details(request:Request, mgmt_server, dmn, name):
     gw = cpg.gateway_by_name(mgmt_server, dmn, name)
-    content = yaml.dump(gw, indent=4, Dumper=cpg.MyDumper)
+    content = yaml.dump(gw.model_dump(), indent=4, Dumper=cpg.MyDumper)
     return templates.TemplateResponse(router.prefix+"/gw_details.html", {
         "title":"Asset details",
         "content": content,
         # "content": f"<p>Mgmt_server: {mgmt_server}</p><p>DMN {dmn}</p><p>Asset {asset}</p>",
         "request": request,
-        })
+    })

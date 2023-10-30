@@ -38,7 +38,8 @@
         <td class="cell">Description</td>
       </tr>
       {% for item in gateways %}
-        <tr>
+        <tr id="{{ item.fqdn }}" class="hover:bg-blue-100 hover:cursor-pointer"
+            onclick='location.href="{{request.path}}{{mgmt_name}}/{{dmn}}/{{item.descr_file.annotation.name}}";''>
           <td class="cell">{{ item.descr_file.annotation.name }}</td>
           <td class="cell font-thin">{{ item.fqdn }}</td>
           <td class="cell">{{ item.descr_file.annotation.ipv4_address }}</td>

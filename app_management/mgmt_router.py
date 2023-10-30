@@ -35,7 +35,7 @@ def mgmt_dashboard(request: Request):
 
 @router.get("/show_domains/")
 def mgmt_show_domains(request: Request, mgmt_server = None):
-    logger.debug(mgmt_server)
+    logger.debug(request.url.path)
     list_domains = cpg.list_mgmt_domains()
     mgmt_servers = [server.descr_file.annotation.name for server in list_domains
                     if server.descr_file.annotation.kind == "MDM"]
@@ -53,7 +53,8 @@ def mgmt_show_domains(request: Request, mgmt_server = None):
         "mgmt_servers": mgmt_servers,
         "mgmt_server": mgmt_server,
         "content": content,
-        "request": request})
+        "request": request,
+    })
 
 
 # def details_dmn(request, mgmt_server, dmn):
