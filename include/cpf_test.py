@@ -35,6 +35,13 @@ def test_login_cached():
     assert client is not None
     assert "Found cached login" in status.comment
 
+def test_login_cached_by_name():
+    mgmt_server_info = get_mgmt_server_login_info('mdmPrime')
+    mgmt_by_name = Mgmt(mgmt_server_info)
+    status, client = mgmt_by_name.login(sch.ManagementToLogin(name=mdm_name, dmn=dmn))
+    assert client is not None
+    assert "Found cached login" in status.comment
+
 
 def test_api_call_version():
     client = mgmt().login(sch.ManagementToLogin(name=mdm_name))[1]

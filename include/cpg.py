@@ -91,9 +91,9 @@ def list_gateways() -> sch.ListOfGatewaySingle:
 
 #region Management
 @router.get("/mgmt_descr_by_fqdn/{mgmt_fqdn}",
-            description="Returns _descr_.yaml for mgmt_fqdn")
-def mgmt_descr_by_fqdn(mgmt_fqdn:str) -> sch.DescrManagement:
-    """ Returns _descr_.yaml for mgmt_fqdn """
+            description="Returns _descr_.yaml for by fqdn or name")
+def mgmt_descr_by_fqdn(mgmt_fqdn) -> sch.DescrManagement:
+    """ Returns _descr_.yaml by fqdn or name """
 
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_MGMT
     try:
@@ -130,5 +130,17 @@ def list_mgmt_domains() -> sch.ListOfManagementServerSingle:
         mgmt_domains_list.append(mgmt_domain)
         # logger.debug(f"\n{yaml.dump(mgmt_domains_list, indent=4, Dumper=MyDumper)}")
     return mgmt_domains_list # list_mgmt_domains
+
+@router.get("/mgmt_descr_by_fqdn/{mgmt_fqdn}",
+            description="Returns _descr_.yaml for by fqdn or name")
+def mgmt_get_fqdn_by_name(mgmt_name) -> str:
+    """ Returns fqdn by management server name """
+
+    dir_mgmt = settings.DIR_SSOT + "/" + settings.DIR_MGMT
+    for mdm_fqdn in os.listdir(dir_mgmt):
+        descr_file = mgmt_descr_by_fqdn(mdm_fqdn)
+        if descr_file.annotation.name == mgmt_name:
+            return mdm_fqdn
+    return None # mgmt_descr_by_fqdn
 
 #endregion Management

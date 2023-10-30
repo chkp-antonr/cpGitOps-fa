@@ -5,8 +5,36 @@
   <p class="text-lg">Show domains.</p>
   <p>List of domains</br>
     Filters per management servers. Allow to update SSoT.</p>
+
   <hr class="my-2"/>
+  <div class="">
+    <label for="mgmt_server" class="text-sm px-1">Select Management server to refresh its domains:</label>
+    <select id="mgmt_server" class="py-1 px-1 border">
+      <option value="">Select server</option>
+      {% for server in mgmt_servers %}
+      <option value="{{ request.path }}?mgmt_server={{ server }}"
+        {% if mgmt_server %}selected{% endif %}>{{ server }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+<script>
+  document.getElementById("mgmt_server").addEventListener('change', function () {
+    const baseUrl = window.location.origin; // Get the base URL
+    const selectedValue = this.value;
+    if (selectedValue) {
+      const newUrl = `${selectedValue}`;
+      window.location.href = newUrl;
+    }
+  });
+</script>
+
+  <hr class="my-2" />
+{{ content|safe }}
+
+{#
   <pre>
 {{ content }}
   </pre>
+#}
 {% endblock content %}

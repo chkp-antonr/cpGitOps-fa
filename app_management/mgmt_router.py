@@ -1,8 +1,9 @@
 import yaml
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request #, Form, Depends
 from fastapi.templating import Jinja2Templates
 
 from include import cpg
+from include import cpf
 from include.cgl import logger
 
 router = APIRouter(
@@ -26,19 +27,31 @@ def mgmt_index(request: Request):
         "request": request})
 
 
-@router.get("/dashboard")
+@router.get("/dashboard/")
 def mgmt_dashboard(request: Request):
     return templates.TemplateResponse(router.prefix+"/dashboard.html", {
         "title":"Dashboard",
         "request": request})
 
-@router.get("/show_domains")
-@router.get("/show_domains/{mgmt}")
-def mgmt_show_domains(request: Request, mgmt = None):
-    content = f"{mgmt}"
+@router.get("/show_domains/")
+def mgmt_show_domains(request: Request, mgmt_server = None):
+    logger.debug(mgmt_server)
+    list_domains = cpg.list_mgmt_domains()
+    mgmt_servers = [server.descr_file.annotation.name for server in list_domains
+                    if server.descr_file.annotation.kind == "MDM"]
+    content = "Select Management server to refresh its domains"
+    if mgmt_server:
+        matched = next((server for server in list_domains
+                        if server.descr_file.annotation.name == mgmt_server), None)
+        if matched:
+            domains = [dmn[0] for dmn in cpf.show_domains(mgmt_server)]
+            content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
+                      f"<p>Domains on MDM: {domains}</p>"
 
     return templates.TemplateResponse(router.prefix+"/show_domains.html", {
-        "title":"Show domains",
+        "title": "Show domains",
+        "mgmt_servers": mgmt_servers,
+        "mgmt_server": mgmt_server,
         "content": content,
         "request": request})
 

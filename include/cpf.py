@@ -6,9 +6,10 @@ import json
 #
 from cpapi import APIClient, APIClientArgs, APIResponse
 from .cgl import logger
-from .cpg import mgmt_descr_by_fqdn, MyDumper
+from .cpg import mgmt_descr_by_fqdn, mgmt_get_fqdn_by_name, MyDumper
 from src.schemas import ManagementToLogin, ManagementServerCachedInfo, \
-    ListOfManagementServerCachedInfo, ListOfManagementLoginInfo, ApiStatus
+    ListOfManagementServerCachedInfo, ListOfManagementLoginInfo, \
+    ManagementToLogin, ApiStatus
 
 # region GlobalsAndSettings
 DEFAULT_COLOR = "Crete Blue"  # for new objects if not specified
@@ -22,16 +23,21 @@ HTTP_DEBUG_LEVEL = 0
 #endregion GlobalsAndSettings
 
 #region Functions
-def get_mgmt_server_login_info(fqdn: str) -> ManagementServerCachedInfo:
-    """ Get login info by fqdn.
+def get_mgmt_server_login_info(fqdn_name: str) -> ManagementServerCachedInfo:
+    """ Get login info by fqdn or name.
     Expect universal login to MDM (not to each DMN)
     """
 
-    mgmt_descr = mgmt_descr_by_fqdn(fqdn)
+    if "." not in fqdn_name:
+        fqdn = mgmt_get_fqdn_by_name(fqdn_name)
+        if fqdn:
+            fqdn_name = fqdn
+    mgmt_descr = mgmt_descr_by_fqdn(fqdn_name)
+
     # logger.debug(mgmt_descr)
 
     mgmt_server_login_info = ManagementServerCachedInfo(
-        fqdn=fqdn,
+        fqdn=fqdn_name,
         name=mgmt_descr.annotation.name,
         server_ip=mgmt_descr.annotation.ipv4_address,
         # port: int = 443
@@ -172,3 +178,17 @@ class Mgmt():
         res = client.api_call(mgmt, command, params, dmn)
         res = {"status_code": 200, "mdm_name":mgmt}
         return res # api_cli
+
+def show_domains(mdm_server: str) -> List[str]:
+    mgmt_server_info = get_mgmt_server_login_info(mdm_server)
+    mdm_name = mgmt_server_info.name
+    mgmt = Mgmt(mgmt_server_info)
+
+    client = mgmt.login(ManagementToLogin(name=mdm_name, dmn="System Data"))[1]
+    res = client.api_call("show-domains", {
+            "limit" : 250,
+            "offset" : 0,
+            "details-level" : "standard"})
+    domains = [(domain['name'], domain) for domain in res.data['objects']]
+    logger.debug(domains)
+    return domains # show_domains
