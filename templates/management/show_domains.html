@@ -17,13 +17,13 @@
       {% endfor %}
     </select>
     <button name="update_ssot" class="button mx-3 w-40"
-      onclick="update_ssot(this, 'update_ssot')">Update SSoT</button>
+      onclick="btn_click(this, 'update_ssot')">Update SSoT</button>
     <button name="fetch_api" class="button mx-3 w-40"
-      onclick="fetch_last(this, 'fetch_api')">Fetch from API</button>
+      onclick="btn_click(this, 'fetch_api')">Fetch from API</button>
   </div>
 
 <script>
-  function update_ssot(element, action) {
+  function btn_click(element, action) {
     const baseUrl = window.location.origin; // Get the base URL
     const selectedValue = document.getElementById("mgmt_server").value;
     if (selectedValue) {

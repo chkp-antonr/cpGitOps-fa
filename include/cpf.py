@@ -11,7 +11,7 @@ from cpapi import APIClient, APIClientArgs, APIResponse
 from include.cgl import logger
 from include.cpg import settings, mgmt_descr_by_fqdn, mgmt_get_fqdn, MyDumper
 from src.schemas import ManagementToLogin, ManagementServerCachedInfo, \
-    ListOfManagementServerCachedInfo, ManagementToLogin, ApiStatus
+    ListOfManagementServerCachedInfo, ManagementToLogin, ApiStatus, ApiCallRequest
 
 # region GlobalsAndSettings
 DEFAULT_COLOR = "Crete Blue"  # for new objects if not specified
@@ -182,7 +182,7 @@ class Mgmt():
         return mgmt_server_login_info # get_mgmt_login_info
 
     def enum_mgmt_api_calls_for_ver(self, api_version:Text="1.8",
-                                    exclude_show_objects=True) -> List[Text]:
+                                    include_show_objects=False) -> List[Text]:
         """
         :return: list of dictionary containing following solo request components for checkpoint management server
             - resource: e.g. 'show-packages'
@@ -208,20 +208,83 @@ class Mgmt():
                 "show-services-compound-tcp",
                 # Misc
                 "show-gateways-and-servers",
-                "show-objects", # ToDo too much
+                # "show-objects", # ToDo too much
                 "show-wildcards",
             ]
         }
         result = query[api_version]
-        if exclude_show_objects:
-            result.pop("show-objects")
+        if include_show_objects: # very big
+            result.append("show-objects")
         return result  # enum_mgmt_api_calls_for_ver
 
-    def fetch_api_dmn(self, mdm_server:Text, dmn:Text) -> ApiStatus:
+    def fetch_packages_dmn(self, mdm_server:Text, dmn:Text=""):
+        fqdn = mgmt_get_fqdn(mdm_server)
+        client = Mgmt().login( \
+                ManagementToLogin(fqdn=fqdn, dmn=dmn))[1]
+        if not client:
+            raise Exception(f"fetch_api_dmn: Login failed for {mdm_server}/{dmn}")
+
+        response = client.api_query("show-packages", details_level="full")
+        packages_list = [package for package in response.data['packages']]
+
+        for package in packages_list:
+            logger.info(f"Retrieving details for package {package['name']} in {dmn}@{fqdn}")
+            pkg_name = package['name']
+            pkg_uid = package['uid']
+            pkg_details = client.api_call("show-package", {
+                                "name": pkg_name,
+                                "details-level": "full"
+                            },)
+
+            package_dir = \
+                f"{settings.DIR_SSOT}/{settings.DIR_MGMT}/" \
+                f"{fqdn}/{dmn}/{settings.MGMT_DIR_TEMP}/{pkg_name}"
+
+            try:
+                file_name = f"{package_dir}/show-package.json"
+                if not os.path.isdir(package_dir):
+                    logger.warning(f"Creating {package_dir}")
+                    os.mkdir(package_dir)
+                with open(file_name, "w") as json_file:
+                    json_file.write(strip_res_obj(pkg_details))
+            except Exception as e:
+                logger.error(f"Can't write {file_name}: {e}")
+
+            access_layers = []  # output of `show-access-rulebase`
+            acc_layers_in_pkg = pkg_details.data.get("access-layers", [])
+            for acc_layer in acc_layers_in_pkg:
+                acc_layer_name = acc_layer['name']
+                logger.debug(f"Retrieving details for access-rulebase {acc_layer_name} in {pkg_name}")
+                access_rulebase = client.api_call("show-access-rulebase", {
+                        "name": acc_layer_name,
+                        "details-level": "full",
+                        "use-object-dictionary": True},)
+                access_layers.append(json.loads(strip_res_obj(access_rulebase)))
+            try:
+                file_name = f"{package_dir}/show-access-rulebase.json"
+                with open(file_name, "w") as json_file:
+                    json_file.write(json.dumps(access_layers, indent=4))
+            except Exception as e:
+                logger.error(f"Can't write {file_name}: {e}")
+
+            logger.debug(f"Retrieving details for nat-rulebase in {pkg_name}")
+            nat_rules = client.api_call("show-nat-rulebase", {
+                        "package": pkg_name,
+                        "details-level": "full",
+                        "use-object-dictionary": True},)
+            try:
+                file_name = f"{package_dir}/nat_rules.json"
+                with open(file_name, "w") as json_file:
+                    json_file.write(strip_res_obj(nat_rules))
+            except Exception as e:
+                logger.error(f"Can't write {file_name}: {e}")
+        return # fetch_packages_dmn ToDo add ApiResponse
+
+    def fetch_api_dmn(self, mdm_server:Text, dmn:Text="") -> ApiStatus:
         """Fetch show-* from API and saves to TEMPCURR
 
         :param Text mdm_server: MDM server fqdn or name
-        :param Text dmn: DMN
+        :param Text dmn: DMN optional (for SMS)
         :return _type_: _description_
         """
         fqdn = mgmt_get_fqdn(mdm_server)
@@ -245,7 +308,8 @@ class Mgmt():
             except Exception as e:
                 logger.error(f"Can't write {file_name}: {e}")
 
-
+        # fetch policies
+        self.fetch_packages_dmn(mdm_server, dmn)
 
         result = ApiStatus(success=True, comment="Test OK", status_code=201)
         return result # fetch_api
@@ -268,6 +332,16 @@ router = APIRouter(
     tags=["CPF"]
 )
 
+
+@router.post("/api_call/",
+            description="Arbitrary api call")
+def api_call(request:ApiCallRequest):
+    client = Mgmt().login( \
+            ManagementToLogin(fqdn=mgmt_get_fqdn(request.mgmt_server),
+                              dmn=request.dmn))[1]
+    response = client.api_call(request.command, request.payload)
+    logger.debug(response)
+    return response # api_call
 
 @router.get("/update_ssot_mgmt_domains/{mdm_server}",
             description="Update SSoT directory structure for the domain by fqdn or name")

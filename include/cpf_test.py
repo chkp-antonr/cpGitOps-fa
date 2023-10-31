@@ -15,19 +15,20 @@ dmn = "cpGitOps"
 def fixt_dmn(request):
     return request.param
 
-# @pytest.mark.parametrize('dmn', domains)
+# -m login to run only marked
+@pytest.mark.login
 def test_login_first(fixt_dmn):
     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_fqdn, dmn=fixt_dmn))
     assert client is not None
     assert "Logged to" in status.comment
 
-# @pytest.mark.parametrize('dmn', domains)
+@pytest.mark.login
 def test_login_cached(fixt_dmn):
     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=fixt_dmn))
     assert client is not None
     assert "Found cached login" in status.comment
 
-# @pytest.mark.parametrize('dmn', domains)
+@pytest.mark.login
 def test_login_cached_again(fixt_dmn):
     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=fixt_dmn))
     assert client is not None
@@ -47,3 +48,10 @@ def test_api_call_domains():
 def test_show_domains():
     res = show_domains("mdmPrime")
     assert len(res) > 1
+
+@pytest.mark.test
+def test_fetch_packages_dmn():
+    res = Mgmt().fetch_packages_dmn(mdm_name, dmn)
+    assert res is None
+
+# pytest .\include\cpf_test.py -v -s -m test

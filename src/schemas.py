@@ -30,6 +30,12 @@ ListOfGatewaySingle = List[GatewaySingle]
 
 
 #region Management
+class ApiCallRequest(BaseModel):
+    mgmt_server: str
+    dmn: str = ""
+    command: str
+    payload: Dict
+
 class DescrManagementDescription(BaseModel):
     """ Description section of __descr__.yaml for the Management server / MDM """
     description: str
