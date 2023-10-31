@@ -6,73 +6,44 @@ mdm_name = "mdmPrime"
 mdm_fqdn = "mdmPrime.il.cparch.in"
 dmn = "cpGitOps"
 # domains = ['cpGitOps']
-domains = ['cpGitOps', 'General', 'System Data']
+# domains = ['cpGitOps', 'General', 'System Data']
 
 # @pytest.fixture(scope="module")
 
-@pytest.mark.parametrize('dmn', domains)
-def test_login_first(dmn):
-    status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_fqdn, dmn=dmn))
+@pytest.fixture(params=['cpGitOps'])
+# @pytest.fixture(params=['cpGitOps', 'General', 'System Data'])
+def fixt_dmn(request):
+    return request.param
+
+# @pytest.mark.parametrize('dmn', domains)
+def test_login_first(fixt_dmn):
+    status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_fqdn, dmn=fixt_dmn))
     assert client is not None
     assert "Logged to" in status.comment
 
-@pytest.mark.parametrize('dmn', domains)
-def test_login_cached(dmn):
-    status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=dmn))
+# @pytest.mark.parametrize('dmn', domains)
+def test_login_cached(fixt_dmn):
+    status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=fixt_dmn))
     assert client is not None
     assert "Found cached login" in status.comment
 
-@pytest.mark.parametrize('dmn', domains)
-def test_login_cached_again(dmn):
-    status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=dmn))
+# @pytest.mark.parametrize('dmn', domains)
+def test_login_cached_again(fixt_dmn):
+    status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=fixt_dmn))
     assert client is not None
     assert "Found cached login" in status.comment
 
+def test_api_call_version():
+    client = Mgmt().login(sch.ManagementToLogin(name=mdm_name))[1]
+    res = client.api_call("show-api-versions")
+    assert len(res.data['supported-versions']) > 0
+
+def test_api_call_domains():
+    client = Mgmt().login(sch.ManagementToLogin(name=mdm_fqdn, dmn="System Data"))[1]
+    res = client.api_call("show-domains")
+    assert res.data['total'] > 1
 
 
-# def test_login_first():
-#     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=dmn))
-#     assert client is not None
-#     assert "Logged to" in status.comment
-
-# def test_login_cached():
-#     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=dmn))
-#     assert client is not None
-#     assert "Found cached login" in status.comment
-
-# def test_login_first_another():
-#     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_fqdn, dmn=dmn2))
-#     assert client is not None
-#     assert "Logged to" in status.comment
-
-# def test_login_cached_another():
-#     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=dmn2))
-#     assert client is not None
-#     assert "Found cached login" in status.comment
-
-# def test_login_cached_first():
-#     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=dmn))
-#     assert client is not None
-#     assert "Found cached login" in status.comment
-
-
-# def test_login_cached_another():
-#     status, client = Mgmt().login(sch.ManagementToLogin(name=mdm_name, dmn=dmn2))
-#     assert client is not None
-#     assert "Found cached login" in status.comment
-
-
-# def test_api_call_version():
-#     client = Mgmt().login(sch.ManagementToLogin(name=mdm_name))[1]
-#     res = client.api_call("show-api-versions")
-#     assert len(res.data['supported-versions']) > 0
-
-# def test_api_call_domains():
-#     client = Mgmt().login(sch.ManagementToLogin(name=mdm_fqdn, dmn="System Data"))[1]
-#     res = client.api_call("show-domains")
-#     assert res.data['total'] > 1
-
-
-# def test_show_domains():
-#     res = show_domains("mdmPrime")
-#     assert len(res) > 1
+def test_show_domains():
+    res = show_domains("mdmPrime")
+    assert len(res) > 1
