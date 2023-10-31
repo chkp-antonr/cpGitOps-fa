@@ -36,7 +36,7 @@ def test_login_cached_again(fixt_dmn):
 def test_api_call_version():
     client = Mgmt().login(sch.ManagementToLogin(name=mdm_name))[1]
     res = client.api_call("show-api-versions")
-    assert len(res.data['supported-versions']) > 0
+    assert len(res.data['supported-versions']) > 0, "Received data=" + str(res.data)
 
 def test_api_call_domains():
     client = Mgmt().login(sch.ManagementToLogin(name=mdm_fqdn, dmn="System Data"))[1]
