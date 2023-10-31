@@ -1,9 +1,10 @@
 """ Check Point related functions """
 
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Text
 import yaml
 import json
+from time import sleep
 from fastapi import APIRouter
 #
 from cpapi import APIClient, APIClientArgs, APIResponse
@@ -68,16 +69,16 @@ class Mgmt():
                             and login.dmn == server_to_login.dmn), None)
         if cached_login is not None \
             and cached_login.client is not None:
+            # ToDo check if not expired (api-version...)
             logger.info(f"Found cached login for "
-                         f"{server_to_login.fqdn} {server_to_login.name}")
+                         f"{cached_login.dmn}@{cached_login.name} {cached_login.name}")
             result = ApiStatus(success=True, status_code=201,
                 comment=f"Found cached login for "
-                        f"{server_to_login.dmn}@{cached_login.name}")
+                        f"{cached_login.dmn}@{cached_login.name} {cached_login.name}")
             return (result, cached_login.client)
 
         # There might be not cached login for the domain,
         # but already cached credentials for MDM
-
         if server_to_login.fqdn:
             matched_server = next((server for server in self.mgmt_servers
                           if server.fqdn == server_to_login.fqdn), None)
@@ -89,6 +90,7 @@ class Mgmt():
             client_args = APIClientArgs(server=matched_server.server_ip,
                 unsafe_auto_accept=unsafe_auto_accept, http_debug_level=HTTP_DEBUG_LEVEL)
             client = APIClient(client_args)
+            mgmt_server_info = matched_server.copy()
         else:
             logger.warning(f"No cached data for login to "
                 f"{server_to_login.fqdn} {server_to_login.name}")
@@ -99,7 +101,6 @@ class Mgmt():
                 mgmt_server_info = self.get_mgmt_server_login_info(server_to_login.fqdn)
             else:
                 mgmt_server_info = self.get_mgmt_server_login_info(server_to_login.name)
-
             # Preliminary prep and check (for New server only)
             client_args = APIClientArgs(server=mgmt_server_info.server_ip,
                 unsafe_auto_accept=unsafe_auto_accept, http_debug_level=HTTP_DEBUG_LEVEL)
@@ -111,28 +112,39 @@ class Mgmt():
                 return ApiStatus(success=False,
                         error_message=f"{mgmt_server_info.name}: Could not get the server's fingerprint",
                         comment="Check connectivity with the server.")
+        mgmt_server_info.dmn = server_to_login.dmn
 
-            # Cache credentials (without client yet) if connection is OK
-            self.mgmt_servers.append(mgmt_server_info)
-            matched_server = next((server for server in self.mgmt_servers
-                          if server.fqdn == mgmt_server_info.fqdn), None)
-
+        # Cache credentials (without client yet) if connection is OK
+        self.mgmt_servers.append(mgmt_server_info)
+        matched_server = next((server for server in self.mgmt_servers
+                        if server.fqdn == mgmt_server_info.fqdn
+                          and server.dmn == server_to_login.dmn), None)
 
         # New login
-        dmn = None
+        dmn = ""
         if server_to_login.dmn:
             dmn = server_to_login.dmn
-        if matched_server.api_key:
-            res = client.login_with_api_key(matched_server.api_key.get_secret_value(), domain = dmn)
-        else:
-            res = client.login(username=matched_server.username,
-                               password=matched_server.password.get_secret_value(),
-                               domain = dmn)
+
+        for count in range(0,9):
+            if matched_server.api_key:
+                res = client.login_with_api_key(matched_server.api_key.get_secret_value(), domain = dmn)
+            else:
+                res = client.login(username=matched_server.username,
+                                password=matched_server.password.get_secret_value(),
+                                domain = dmn)
+            if not res.success \
+                and "err_too_many_requests" in res.error_message:
+                logger.debug(f"Login: err_too_many_requests. Try {count}")
+                sleep(5)
+            else:
+                break
+
         if res.success:
             logger.info(f"Logged to {server_to_login.dmn}@{matched_server.name} as {res.data['user-name']}")
             result = ApiStatus(success=True, status_code=201,
                 comment=f"Logged to {server_to_login.dmn}@{matched_server.name} as {res.data['user-name']}")
             matched_server.client = client
+            matched_server.username = res.data['user-name']
         else:
             logger.error(f"Login to {server_to_login.dmn}@{matched_server.name} failed."
                          f"{res.status_code}: '{res.error_message}'")
@@ -165,6 +177,71 @@ class Mgmt():
         logger.debug(mgmt_server_login_info)
         return mgmt_server_login_info # get_mgmt_login_info
 
+    def enum_mgmt_api_calls_for_ver(self, api_version:Text="1.8") -> List[Text]:
+        """
+        :return: list of dictionary containing following solo request components for checkpoint management server
+            - resource: e.g. 'show-packages'
+        """
+        query = {
+            "1.8": [
+                # Network Objects
+                "show-hosts",
+                "show-networks",
+                "show-groups",
+                "show-security-zones",
+                # Service & Applications
+                "show-services-tcp",
+                "show-services-udp",
+                "show-services-icmp",
+                "show-services-sctp",
+                "show-services-other",
+                "show-service-groups",
+                "show-services-dce-rpc",
+                "show-services-rpc",
+                "show-services-gtp",
+                "show-services-citrix-tcp",
+                "show-services-compound-tcp",
+                # Misc
+                "show-gateways-and-servers",
+                "show-objects", # ToDo too much
+                "show-wildcards",
+            ]
+        }
+        return query[api_version]  # enum_mgmt_api_calls_for_ver
+
+    def fetch_api_dmn(self, mdm_server:Text, dmn:Text) -> ApiStatus:
+        """Fetch show-* from API and saves to TEMPCURR
+
+        :param Text mdm_server: MDM server fqdn or name
+        :param Text dmn: DMN
+        :return _type_: _description_
+        """
+        fqdn = mgmt_get_fqdn(mdm_server)
+        client = Mgmt().login( \
+                ManagementToLogin(fqdn=fqdn, dmn=dmn))[1]
+        if not client:
+            raise Exception(f"fetch_api_dmn: Login failed for {mdm_server}/{dmn}")
+
+        commands = self.enum_mgmt_api_calls_for_ver("1.8") # ToDo
+        # commands = ["show-hosts"]
+        for command in commands:
+            response = client.api_query(command, details_level="full")
+            # logger.debug(f"{command} on DMN {mdm_server}/{dmn}\n{strip_res_obj(response)}\n")
+            logger.debug(f"{command} on DMN {mdm_server}/{dmn}")
+
+            try:
+                file_name = f"{settings.DIR_SSOT}/{settings.DIR_MGMT}/" \
+                            f"{fqdn}/{dmn}/{settings.MGMT_DIR_TEMP}/{command}.json"
+                with open(file_name, "w") as json_file:
+                    json_file.write(strip_res_obj(response))
+            except Exception as e:
+                logger.error(f"Can't write {file_name}: {e}")
+
+
+
+        result = ApiStatus(success=True, comment="Test OK", status_code=201)
+        return result # fetch_api
+
 
 def show_domains(mdm_fqdn_name: str) -> List[str]:
     client = Mgmt().login( \
@@ -174,7 +251,7 @@ def show_domains(mdm_fqdn_name: str) -> List[str]:
             "offset" : 0,
             "details-level" : "standard"})
     domains = [(domain['name'], domain) for domain in res.data['objects']]
-    logger.debug(domains)
+    # logger.debug(domains)
     return domains # show_domains
 
 #region cpf
@@ -184,8 +261,8 @@ router = APIRouter(
 )
 
 @router.get("/update_ssot_mgmt_domains/{mdm_server}",
-            description="Returns _descr_.yaml for by fqdn or name")
-def update_ssot_mgmt_domains(mdm_server:str) -> Dict[str, List[str]]:
+            description="Update SSoT directory structure for the domain by fqdn or name")
+def update_ssot_mgmt_domains(mdm_server:Text) -> Dict[Text, List[Text]]:
     domain_names = [domain[0] for domain in show_domains(mdm_server)]
     domain_names.append("Global")
 
@@ -197,7 +274,7 @@ def update_ssot_mgmt_domains(mdm_server:str) -> Dict[str, List[str]]:
         dmn_path = os.path.join(mdm_path, dmn)
         if not os.path.isdir(dmn_path):
             try:
-                logger.warning(f"Creating {dmn_path}")
+                logger.info(f"Creating {dmn_path}")
                 os.mkdir(dmn_path)
                 dirs_created.append(dmn_path)
             except FileExistsError:
@@ -208,7 +285,7 @@ def update_ssot_mgmt_domains(mdm_server:str) -> Dict[str, List[str]]:
             mgmt_dir = os.path.join(dmn_path, dir)
             if not os.path.isdir(mgmt_dir):
                 try:
-                    logger.info(f"Creating {mgmt_dir}")
+                    logger.debug(f"Creating {mgmt_dir}")
                     os.mkdir(mgmt_dir)
                     dirs_created.append(mgmt_dir)
                 except FileExistsError:
@@ -219,4 +296,21 @@ def update_ssot_mgmt_domains(mdm_server:str) -> Dict[str, List[str]]:
         "dirs_not_created": dirs_not_created,
     }
     return result # update_ssot
+
+@router.get("/fetch_api_mgmt_domains/{mdm_server}",
+            description="Fetch all jsons from API to TEMPCURR from the domain by fqdn or name")
+def fetch_api_mgmt_domains(mdm_server:Text) -> Dict[Text, List[Text]]:
+    # Use checkboxes to select domains?
+    domain_names = [domain[0] for domain in show_domains(mdm_server)]
+    domain_names.append("Global")
+
+    for dmn in domain_names:
+        logger.warning(dmn)
+        res = Mgmt().fetch_api_dmn(mdm_server, dmn=dmn)
+
+    result = {
+        "updated_domains": [],
+        "not_updated_domains": []
+    }
+    return result # fetch_last_mgmt_domains
 #endregion cpf

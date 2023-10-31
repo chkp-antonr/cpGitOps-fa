@@ -78,7 +78,8 @@ a.sidebar_menu_item:hover {
     line-height: 1.75rem;
     --tw-bg-opacity: 1;
     background-color: rgb(13 148 136 / var(--tw-bg-opacity));
-    border-radius: 0.75rem;
+    /* border-radius: 0.75rem; */
+    border-radius: 9999px;
     --tw-text-opacity: 1;
     color: rgb(255 255 255 / var(--tw-text-opacity));
 }

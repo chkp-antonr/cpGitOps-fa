@@ -33,9 +33,10 @@ def mgmt_dashboard(request: Request):
         "title":"Dashboard",
         "request": request})
 
-@router.get("/show_domains/")
+@router.get("/show_domains/",
+            description="{mgmt_server} Mgmt server name to filter by, actions:[update_ssot,fetch_api]")
 def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
-    logger.debug(request.url.path)
+    # logger.debug(request.url.path)
     list_domains = cpg.list_mgmt_domains()
     mgmt_servers = [server.descr_file.annotation.name for server in list_domains
                     if server.descr_file.annotation.kind == "MDM"]
@@ -50,8 +51,12 @@ def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
 
     update_ssot_result = {}
     if action == "update_ssot":
-        logger.warning("Update SSoT")
+        logger.info("Update SSoT")
         update_ssot_result = cpf.update_ssot_mgmt_domains(mgmt_server)
+    elif action == "fetch_api":
+        logger.warning("Fetch from API")
+        fetch_last_result = cpf.fetch_api_mgmt_domains(mgmt_server)
+
 
     return templates.TemplateResponse(router.prefix+"/show_domains.html", {
         "title": "Show domains",

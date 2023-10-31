@@ -79,12 +79,18 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/")
 def index(request: Request):
     content = "Main page"
-    # # for tests
+    # for tests
     # from src import schemas as sch
     # from include import cpf
-    # status, client = cpf.MgmtL().login(sch.ManagementToLogin(name="mdmPrime", dmn="cpGitOps"))
+    # status, client = cpf.Mgmt().login(sch.ManagementToLogin(name="mdmPrime", dmn="cpGitOps"))
     # content=status
-    # logger.debug(status)
+    # logger.warning(status)
+    # status, client = cpf.Mgmt().login(sch.ManagementToLogin(name="mdmPrime", dmn="General"))
+    # content=status
+    # logger.warning(status)
+    # status, client = cpf.Mgmt().login(sch.ManagementToLogin(name="mdmPrime", dmn="cpGitOps"))
+    # content=status
+    # logger.critical(status)
 
     return templates.TemplateResponse("index.html", {
         "title":"Main page",
