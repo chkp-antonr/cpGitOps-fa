@@ -16,9 +16,9 @@
         {% if mgmt_server %}selected{% endif %}>{{ server }}</option>
       {% endfor %}
     </select>
-    <button name="update_ssot" class="button mx-3 w-40"
-      onclick="btn_click(this, 'update_ssot')">Update SSoT</button>
-    <button name="fetch_api" class="button mx-3 w-40"
+    <button name="update_ssot_dirs" class="button mx-3 w-44" title="Update SSoT directory structure from API"
+      onclick="btn_click(this, 'update_ssot_dirs')">SSoT Dir update</button>
+    <button name="fetch_api" class="button mx-3 w-44" title="Fetch objects and packages from API to CURRTEMP"
       onclick="btn_click(this, 'fetch_api')">Fetch from API</button>
   </div>
 

@@ -1,7 +1,7 @@
 """ GitOps-related module """
 
 import os
-from typing import List
+from typing import List, Union
 import yaml
 from fastapi import APIRouter
 
@@ -28,9 +28,9 @@ class MyDumper(yaml.Dumper):
 
 
 #region Gateways
-@router.get("/gateway_descr_by_fqdn/{mgmt_fqdn}",
+@router.get("/gateway_descr_by_fqdn/{gw_fqdn}",
             description="Returns _descr_.yaml for gw_fqdn")
-def gateway_descr_by_fqdn(gw_fqdn) -> sch.DescrGateway:
+def gateway_descr_by_fqdn(gw_fqdn) -> Union[sch.DescrGateway,None]:
     """ Returns _descr_.yaml for gw_fqdn """
 
     dir_gw = settings.DIR_SSOT + "/" + settings.DIR_GW
@@ -38,11 +38,13 @@ def gateway_descr_by_fqdn(gw_fqdn) -> sch.DescrGateway:
         f_descr = os.path.join(dir_gw, gw_fqdn) + "/" + settings.FN_DESCR
         with open(f_descr, "r") as yaml_file:
             descr = yaml.safe_load(yaml_file)
+        logger.debug(f"{f_descr} loaded")
+        return sch.DescrGateway(**descr)
     except FileNotFoundError:
-        print(f"{f_descr} not found")
+        logger.error(f"{f_descr} not found")
         return None
     # t = sch.DescrGateway(descr)
-    return sch.DescrGateway(**descr) # gateway_descr_by_fqdn
+    return None # gateway_descr_by_fqdn
 
 
 @router.get("/gateway_by_name/{mgmt_server}/{dmn}/{name}",

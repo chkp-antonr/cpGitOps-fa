@@ -18,7 +18,7 @@ class DescrGatewayDescription(BaseModel):
 class DescrGateway(BaseModel):
     """ Full __descr__.yaml for the Management server / MDM """
     annotation: DescrGatewayDescription
-    credentials: Dict
+    credentials: Dict = None
 
 class GatewaySingle(BaseModel):
     """ Descr with fqdn """

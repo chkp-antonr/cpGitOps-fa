@@ -72,13 +72,14 @@ class Mgmt():
             # Check if login still valid
             response = cached_login.client.api_call("show-api-versions")
             if not response.success: # expired
+                logger.error(f"Invalidating login to {server_to_login.dmn}@{matched_server.name}")
                 cached_login.client = None # invalidate client
                 return self.login(server_to_login) # call again and return
             logger.info(f"Found cached login for "
-                         f"{cached_login.dmn}@{cached_login.name} {cached_login.name}")
+                         f"{cached_login.name}/{cached_login.dmn}/{cached_login.username}")
             result = ApiStatus(success=True, status_code=201,
                 comment=f"Found cached login for "
-                        f"{cached_login.dmn}@{cached_login.name} {cached_login.name}")
+                        f"{cached_login.name}/{cached_login.dmn}/{cached_login.username}")
             return (result, cached_login.client)
 
         # There might be not cached login for the domain,
@@ -150,10 +151,10 @@ class Mgmt():
             matched_server.client = client
             matched_server.username = res.data['user-name']
         else:
-            logger.error(f"Login to {server_to_login.dmn}@{matched_server.name} failed."
+            logger.error(f"Login to {cached_login.name}/{cached_login.dmn} failed."
                          f"{res.status_code}: '{res.error_message}'")
             result = ApiStatus(error_message=f"{res.status_code}: '{res.error_message}'",
-                               comment=f"Login to {server_to_login.dmn}@{matched_server.name} failed.")
+                               comment=f"Login to {cached_login.name}/{cached_login.dmn} failed.")
             client = None
         # logger.debug(f"\n{yaml.dump(res, indent=4, Dumper=MyDumper)}")
         return (result, client) # login

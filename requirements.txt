@@ -4,5 +4,6 @@ pydantic-settings
 pyyaml
 pylint
 pytest-env
+websockets
 
 cp-mgmt-api-sdk

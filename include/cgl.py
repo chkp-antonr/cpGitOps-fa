@@ -2,7 +2,7 @@
 
 import os
 from typing import Union
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 #region Settings
 # https://progressstory.com/tech/configuration-management-python-pydantic/
@@ -24,30 +24,26 @@ class Base(BaseSettings):
     GW_TEMPLATES: str = "templates.yaml"
 
     # SECRET_KEY: str = Field('random_string', env='ANOTHER_SECRET_KEY')
-    class Config:
-        case_sensitive = False
-        env_file = '.env' # This is the key factor
+    # class Config:
+    #     case_sensitive = False
+    #     env_file = '.env' # This is the key factor
+    model_config = SettingsConfigDict(env_file='.env')
 
 class Prod(Base):
     # username = "Production"
     # port = 5051
 
-    class Config:
-        env_file = 'prod.env'
+    model_config = SettingsConfigDict(env_file='prod.env')
 
 class Dev(Base):
     # username = "TRIPATHI"
 
-    class Config:
-        case_sensitive = False
-        env_file = 'dev.env'
+    model_config = SettingsConfigDict(env_file='dev.env')
 
 class Test(Base):
     DIR_SSOT: str = "../SSoT-test"
 
-    class Config:
-        case_sensitive = False
-        env_file = 'dev.env'
+    model_config = SettingsConfigDict(env_file='dev.env')
 
 
 config = dict(
@@ -79,11 +75,11 @@ class ColorFormatter(ColourizedFormatter):
     }
     def format(self, record):
         import click
-        if record.levelno == logging.DEBUG:
-            self._style._fmt = click.style(f"{LOGFORMAT_DEBUG}", fg=self.log_colors[record.levelno])
-        else:
+        if record.levelno == logging.INFO:
             # self._style._fmt = cgl.LOGFORMAT + click.style(" []", fg="cyan")
             self._style._fmt = click.style(f"{LOGFORMAT}", fg=self.log_colors[record.levelno])
+        else:
+            self._style._fmt = click.style(f"{LOGFORMAT_DEBUG}", fg=self.log_colors[record.levelno])
         return super().format(record)
 
 # Use it for colored logging

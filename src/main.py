@@ -85,13 +85,6 @@ def index(request: Request):
     # res = cpf.Mgmt().fetch_packages_dmn("mdmPrime", dmn="cpGitOps")
     # status, client = cpf.Mgmt().login(sch.ManagementToLogin(name="mdmPrime", dmn="cpGitOps"))
     # content=status
-    # logger.warning(status)
-    # status, client = cpf.Mgmt().login(sch.ManagementToLogin(name="mdmPrime", dmn="General"))
-    # content=status
-    # logger.warning(status)
-    # status, client = cpf.Mgmt().login(sch.ManagementToLogin(name="mdmPrime", dmn="cpGitOps"))
-    # content=status
-    # logger.critical(status)
 
     return templates.TemplateResponse("index.html", {
         "title":"Main page",

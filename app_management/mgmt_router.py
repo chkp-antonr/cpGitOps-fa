@@ -50,7 +50,7 @@ def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
                       f"<p>Domains on MDM: {domains}</p>"
 
     update_ssot_result = {}
-    if action == "update_ssot":
+    if action == "update_ssot_dirs":
         logger.info("Update SSoT")
         update_ssot_result = cpf.update_ssot_mgmt_domains(mgmt_server)
     elif action == "fetch_api":
