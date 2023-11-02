@@ -6,4 +6,5 @@ pylint
 pytest-env
 websockets
 
+py2puml
 cp-mgmt-api-sdk

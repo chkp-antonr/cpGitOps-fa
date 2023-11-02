@@ -1,0 +1,100 @@
+@startuml C4_Elements
+' https://github.com/plantuml-stdlib/C4-PlantUML/tree/master
+!include <C4/C4_Context>
+' !define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+' !define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+' !include DEVICONS/git.puml
+
+LAYOUT_LEFT_RIGHT()
+
+' hide stereotype
+HIDE_STEREOTYPE()
+
+header [System context]
+title cpGitOps operator - Management configuration files flow
+
+sprite $cplogo [64x64/4z] {
+nPG7akCm40C9uFzlljl0pMmRfTWLBQcDuP2SSGEofHrsNh0sslb4-_J4s_GT5UGN--8JxujFzlg-qbVhwvrD-NA-iFNOrqBcJ_oa_yuIOm7wPHE2JsXnc6FI
+HIgtmAsUPOjLwreTZr7hASxrBj_xV6MVdsTeNtpSnJDrlA60ilby0wloXTrGK_uCyJBUcjzp-NoStcDiEq6Vp-EFLGfyuO7GYux-ulbYyRmLYrEYtxfI-3Jb
+vZU5FxFy-GUUYw_zM3DIinfz5WE-uRZX1mAVGlJOLptn9ztrXuJMD_gkXY_xwkON-gFp1U_LpjyYlkgWYZd6Hq1k1hbJmZEyGeEeT0-cr9bIPzpfZBlMCJA7
+TmZi7Xdi7jcVhiOcD1ddyny
+}
+
+
+AddElementTag("cp",  $bgColor="#DA1572")
+
+Boundary(sb_yaml, "YAML" ) {
+    System(upd, "UPD", "Update [yaml]")
+    rectangle updcurr [
+    1. Take update (host, rule...) [yaml]
+    Merge to CURRent
+    desired state (hosts, rules...) [yaml]
+    ]
+    System(curr, "CURR", "Current [yaml]")
+}
+
+Boundary(sb_json, "JSON") {
+    System(temp, "TEMP", "Cached from API [json]")
+    rectangle templast [
+    Diff in Detailed mode
+    (default parameters
+    changes not defined
+    in CURR)
+    Save if OK
+    ]
+    System(last, "LAST", "Stored from API [json]")
+    rectangle apitemp [
+    2. Retrieve and cache current API configuration
+    ]
+    rectangle lastapi [
+    Optionally restore LAST
+    (anti-tampering)
+    ]
+}
+
+Boundary(sb_conv, "YAML-JSON\nconversion"){
+    rectangle tempcurr [
+    3. Find diff between CURRent (desired)
+    and actual (just cached)
+    ]
+    rectangle currapi [
+    4. Update API
+    ]
+    rectangle lastcurr [
+    Update CURR with
+    "non default" changes
+    ]
+}
+
+System_Ext(api, "<$cplogo,scale=0.4,color=#d8085e> API", "API (on management)")
+
+
+
+Rel(upd, updcurr, "")
+Rel(updcurr, curr, "")
+
+Rel(api, apitemp, "")
+Rel(apitemp, temp, "")
+
+Rel_U(temp, tempcurr, "")
+Rel_U(tempcurr, curr, "")
+
+Rel(curr, currapi, "")
+Rel(currapi, api, "")
+
+
+Rel(temp, templast, "")
+Rel(templast, last, "")
+
+Rel(last, lastcurr, "")
+Rel(lastcurr, curr, "")
+
+
+Rel(last, lastapi, "")
+Rel(lastapi, api, "")
+
+
+' SHOW_LEGEND()
+' SHOW_FLOATING_LEGEND()
+' Lay_Distance(cpassets, LEGEND(), 1)
+@enduml

@@ -1,0 +1,124 @@
+@startuml C4_Elements
+' !include <C4/C4_Container>
+' !include C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+' skinparam wrapWidth auto
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!include DEVICONS/git.puml
+
+' <style>
+' Boundary {
+'   BackgroundColor cyan
+'   LineColor blue
+'   RoundCorner 10
+'   FontColor BlueViolet
+'   FontStyle italic
+'   FontSize 24
+' }
+' </style>
+
+header [Container diagram]
+title cpGitOps operator - GAIA features
+
+hide stereotype
+skinparam wrapWidth auto
+' skinparam ParticipantPadding 10
+' skinparam BoxPadding 5
+skinparam nodesep 10
+' skinparam ranksep 100
+
+AddElementTag("cp",  $bgColor="#DA1572")
+AddBoundaryTag("cp",  $borderColor="#DA1572", $borderStyle=0, $borderThickness=3)
+AddBoundaryTag("cpgitops",  $fontColor="#DA1572", $borderColor="#DA1572", $borderStyle=0, $borderThickness=2)
+AddElementTag("cpappliance",  $bgColor="#FACEE3", $borderColor="#FACEE3", $fontColor=Black)
+AddElementTag("container", $bgColor="#438DD5")
+
+Boundary(ssot_group, "Single Source of Truth") {
+    System_Ext(ssot, "SCM (Git)", "Single Source of Truth", $sprite="git,scale=0.75")
+    rectangle rect_gaia [
+    == GAIA assets
+    ' ..
+    {{
+        hide stereotype
+        Component_Ext(clish, "clish config")
+        Component_Ext(files, "files")
+        Component_Ext(cmd, "get/set commands")
+        Component_Ext(templates, "templates")
+        Lay_R(clish, files)
+        ' Lay_D(clish, cmd)
+        ' Lay_R(cmd, templates)
+    }}
+    ]
+    rectangle rect_mgmt [
+    == Management assets
+    ' ..
+    {{
+        hide stereotype
+        Component_Ext(mgmt_api, "api", "")
+        Component_Ext(mgmt_extra, "Extra (dbedit, etc.)", "")
+    }}
+    ]
+    Lay_D(ssot, rect_mgmt)
+    Lay_D(rect_mgmt, rect_gaia)
+}
+
+
+System_Boundary(cpgitops_group, "cpGitOps", $tags="cpgitops") {
+    ' Container(compliance, "Compliance", "clish")
+    rectangle rect_compliance $CONTAINER_BG_COLOR [
+    == Compliance
+    ..
+    {{
+        hide stereotype
+        AddElementTag("container", $fontColor=$CONTAINER_FONT_COLOR, $bgColor=$CONTAINER_BG_COLOR)
+
+        Container(compliance_clish, "clish")
+        Container(compliance_files, "files")
+        Container(compliance_cmd, "get/set")
+        Container(compliance_templates, "templates")
+        Lay_R(compliance_clish, compliance_files)
+    }}
+    ]
+    rectangle rect_diff $CONTAINER_BG_COLOR [
+    == Diff/Sync
+    ..
+    {{
+        hide stereotype
+        AddElementTag("container", $fontColor=$CONTAINER_FONT_COLOR, $bgColor=$CONTAINER_BG_COLOR)
+
+        Container(diff_clish, "clish")
+        Container(diff_files, "files")
+        Container(diff_cmd, "get/set")
+        Container(diff_templates, "templates")
+        Lay_R(diff_clish, diff_files)
+    }}
+    ]
+    Lay_D(rect_compliance, rect_diff)
+}
+
+Rel_U(rect_compliance, rect_gaia, "")
+Rel_U(rect_diff, rect_gaia, "")
+
+System(appliance, "GAIA", "Check Point", $tags="cpappliance")
+' Rel_R(cpgitops_group, appliance, "Get/Set")
+' Rel(appliance, cpgitops_group, "configs")
+Rel_R(cpgitops_group, appliance, "")
+Rel(appliance, cpgitops_group, "")
+
+' Rel(cpgitops_group, ssot_group, "T")
+' Lay_D(ssot_group, cpgitops_group)
+' Lay_Distance(ssot_group, cpgitops_group, 3)
+' System(cpgitops, "cpGitOps", "[VM/Pod/cli]\nDeclarative Security Management", $tags="cp")
+
+
+' System(cpgitops, "cpGitOps", "[VM/Pod/cli]\nDeclarative Security Management", $tags="cp")
+
+
+' SHOW_FLOATING_LEGEND()
+' SHOW_FLOATING_LEGEND(false)
+' Lay_D(ssot, LEGEND())
+' Lay_Distance(ssot_group, LEGEND(), 3)
+
+@enduml

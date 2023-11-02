@@ -1,0 +1,13 @@
+@startuml
+' https://plantuml.com/stdlib
+stdlib
+' listsprite
+' sprite $cplogo [64x64/4z] {
+' nPG7akCm40C9uFzlljl0pMmRfTWLBQcDuP2SSGEofHrsNh0sslb4-_J4s_GT5UGN--8JxujFzlg-qbVhwvrD-NA-iFNOrqBcJ_oa_yuIOm7wPHE2JsXnc6FI
+' HIgtmAsUPOjLwreTZr7hASxrBj_xV6MVdsTeNtpSnJDrlA60ilby0wloXTrGK_uCyJBUcjzp-NoStcDiEq6Vp-EFLGfyuO7GYux-ulbYyRmLYrEYtxfI-3Jb
+' vZU5FxFy-GUUYw_zM3DIinfz5WE-uRZX1mAVGlJOLptn9ztrXuJMD_gkXY_xwkON-gFp1U_LpjyYlkgWYZd6Hq1k1hbJmZEyGeEeT0-cr9bIPzpfZBlMCJA7
+' TmZi7Xdi7jcVhiOcD1ddyny
+' }
+' title Use of sprites <$cplogo,scale=0.4>
+' note left : CP <$cplogo,color=#d8085e>
+@enduml

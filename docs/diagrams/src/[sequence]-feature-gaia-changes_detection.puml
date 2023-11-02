@@ -1,0 +1,71 @@
+@startuml C4_Elements
+' !include <C4/C4_Container>
+' !include C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Sequence.puml
+' !theme C4_united from https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/themes
+
+skinparam wrapWidth auto
+skinparam ParticipantPadding 10
+skinparam BoxPadding 50
+
+hide stereotypes
+show footbox
+
+' !define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+' !include DEVICONS/git.puml
+
+' LAYOUT_WITH_LEGEND()
+
+header [Sequence diagram]
+title cpGitOps operator - GAIA changes detection
+
+
+AddElementTag("cpgitops",  $bgColor="#DA1572", $borderColor="#DA1572", $fontColor=White)
+AddElementTag("cpappliance",  $bgColor="#FACEE3", $borderColor="#FACEE3", $fontColor=Black)
+AddComponentTag("logs", $bgColor="#CCF1FF")
+' AddBoundaryTag("cp",  $borderColor="#DA1572", $borderStyle=0, $borderThickness=3)
+
+Component_Ext(clish_cfg, "clish config")
+System(cpgitops, "cpGitOps", $tags="cpgitops")
+System(clish, "Clish", $tags="cpappliance")
+
+Boundary(log_group, "For review", "Logging")
+    Component_Ext(log_missed, "Missed", $tags="logs")
+    Component_Ext(log_deleted, "Deleted", $tags="logs")
+Boundary_End()
+
+
+== Wait for schedule/trigger ==
+[->>cpgitops: Trigger
+Rel(clish_cfg, cpgitops, "New Commit")
+== Fetch actual config ==
+activate cpgitops
+Rel(cpgitops, clish, "Request config")
+Rel(clish, cpgitops, "config")
+== Read LAST config ==
+Rel(cpgitops, clish_cfg, "Read config")
+Rel(clish_cfg, cpgitops, "config")
+|||
+== Compare line by line ==
+note over cpgitops
+    Consider exclusions
+    (lines not mandatory to match)
+end note
+loop over LAST config line by line
+        alt line in LAST NOT exists in ACTUAL
+            Rel(cpgitops, log_missed, "Line missed in Actual")
+            Rel(cpgitops, clish, "Add line")
+        end
+end
+loop over ACTUAL config line by line
+        alt line in ACTUAL NOT exists in LAST
+            Rel(cpgitops, log_deleted, "Extra Line in Actual")
+        end
+end
+|||
+== Final ==
+Rel(cpgitops, clish_cfg, "Store LAST config\n(optionally)")
+deactivate cpgitops
+
+' SHOW_LEGEND()
+@enduml

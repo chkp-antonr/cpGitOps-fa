@@ -24,9 +24,6 @@ class Base(BaseSettings):
     GW_TEMPLATES: str = "templates.yaml"
 
     # SECRET_KEY: str = Field('random_string', env='ANOTHER_SECRET_KEY')
-    # class Config:
-    #     case_sensitive = False
-    #     env_file = '.env' # This is the key factor
     model_config = SettingsConfigDict(env_file='.env')
 
 class Prod(Base):

@@ -1,0 +1,14 @@
+@startyaml
+annotations:
+  kind: hosts # optional, by name
+  dmn:
+    - cpGitOps
+objects:
+  - name: "newHost"
+    ipv4-address: "2.2.2.2"
+    color: cyan
+  - name: "hTest"
+    ipv4-address: "3.3.3.3"
+    nat-settings:
+      auto-rule: false
+@endyaml

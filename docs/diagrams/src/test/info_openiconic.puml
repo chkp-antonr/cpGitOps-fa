@@ -1,0 +1,9 @@
+@startuml
+' https://plantuml.com/openiconic
+listopeniconic
+' title: <size:20><&heart>Use of OpenIconic<&warning></size>
+' class Wifi
+' note left
+'   Click on <&wifi>
+' end note
+@enduml

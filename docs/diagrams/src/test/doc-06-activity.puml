@@ -1,0 +1,264 @@
+@startuml
+start
+!pragma useVerticalIf on
+if (condition A) then (yes)
+  :Text 1;
+elseif (condition B) then (yes)
+  :Text 2;
+  stop
+(no) elseif (condition C) then (yes)
+  :Text 3;
+(no) elseif (condition D) then (yes)
+  :Text 4;
+else (nothing)
+  :Text else;
+endif
+stop
+
+switch (test?)
+case ( condition A )
+  :Text 1;
+case ( condition B )
+  :Text 2;
+case ( condition C )
+  :Text 3;
+case ( condition D )
+  :Text 4;
+case ( condition E )
+  :Text 5;
+endswitch
+#AliceBlue:action;
+
+start
+repeat
+  :Test something;
+    if (Something went wrong?) then (no)
+      #palegreen:OK;
+      break
+    endif
+    ->NOK;
+    #pink:Alert "Error with long text";
+repeat while (Something went wrong with long text?) is (yes) not (no)
+->//merged step//;
+:Alert "Success";
+end
+
+if (Test Question?) then (yes)
+'space label only for alignment
+label sp_lab0
+label sp_lab1
+'real label
+label lab
+:shared;
+else (no)
+if (Second Test Question?) then (yes)
+label sp_lab2
+goto sp_lab1
+else
+:nonShared;
+endif
+endif
+:merge;
+
+while (check filesize ?) is (not empty)
+  :read file;
+  backward:log;
+endwhile (empty)
+:close file;
+
+detach
+
+if (multiprocessor?) then (yes)
+  fork
+    :Treatment 1;
+  fork again
+    :Treatment 2;
+  end fork {labeled}
+else (monoproc)
+  :Treatment 1;
+  :Treatment 2;
+endif
+
+
+split
+   :A;
+split again
+   :B;
+split again
+   :C;
+split again
+   :a;
+   :b;
+end split
+:D;
+
+split
+   -[hidden]->
+   :A;
+split again
+   -[hidden]->
+   group Simple #lightgreen
+   #cyan:B;
+   -[#green,dashed]-> The text can
+   be **very** long...;
+   :b;
+   end group
+split again
+   -[hidden]->
+   :C;
+end split
+:D [[http://plantuml.com website]];
+
+partition #white/red "**process** HelloWorld" {
+split
+   :A;
+   kill
+split again
+   :B;
+   detach
+split again
+   :C;
+   kill
+split again
+    end
+    note right #yellow/cyan
+    This note is on several
+    //lines// and can contain <b>HTML</b>
+    ====
+    * Calling the method ""foo()"" is prohibited
+    end note
+end split
+}
+
+group Group
+  :Activity;
+end group
+floating note: Note on Group
+
+partition Partition {
+  :Activity;
+}
+floating note: Note on Partition
+
+package Package {
+  :Activity;
+}
+floating note: Note on Package
+
+rectangle Rectangle {
+  :Activity;
+}
+floating note: Note on Rectangle
+
+card Card {
+  :Activity;
+}
+floating note: Note on Card
+
+' |#pink|Actor_For_red|
+' start
+' if (color?) is (red) then
+' #pink:**action red**;
+' :foo1;
+' else (not red)
+' |#lightgray|Actor_For_no_red|
+' #lightgray:**action not red**;
+' :foo2;
+' endif
+' |Next_Actor|
+' #lightblue:foo3;
+' :foo4;
+' |Final_Actor|
+' #palegreen:foo5;
+
+' |#palegreen|f| fisherman
+' |c| cook
+' |#gold|e| eater
+' |f|
+' start
+' :go fish;
+' |c|
+' :fry fish;
+' |e|
+' :eat fish;
+' stop
+
+detach
+
+:Ready;
+:next(o)|
+:Receiving;
+split
+ :nak(i)<
+ :ack(o)>
+split again
+ :ack(i)<
+ :next(o)
+ on several lines|
+ :i := i + 1]
+ :ack(o)>
+split again
+ :err(i)<
+ :nak(o)>
+split again
+ :foo/
+split again
+ :bar\\
+split again
+ :i > 5}
+stop
+end split
+:finish;
+
+detach
+
+start
+:SDL Shape;
+:input; <<input>>
+:output; <<output>>
+:procedure; <<procedure>>
+:load; <<load>>
+:save; <<save>>
+:continuous; <<continuous>>
+:task; <<task>>
+end
+
+' skinparam conditionStyle InsideDiamond
+
+<style>
+activityDiagram {
+'   BackgroundColor #33668E
+'   BorderColor #33668E
+'   FontColor #888
+'   FontName arial
+
+  diamond {
+    BackgroundColor #ccf
+    LineColor #00FF00
+    FontColor green
+    FontName arial
+    FontSize 14
+  }
+'   arrow {
+'     FontColor gold
+'     FontName arial
+'     FontSize 15
+'   }
+  partition {
+    LineColor red
+    FontColor green
+    RoundCorner 10
+    BackgroundColor PeachPuff
+  }
+  note {
+    FontColor Blue
+    LineColor Navy
+    BackgroundColor #ccf
+  }
+}
+document {
+   BackgroundColor transparent
+}
+</style>
+
+@enduml

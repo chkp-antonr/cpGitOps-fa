@@ -1,0 +1,14 @@
+@startuml
+' !theme bluegray
+' colors
+' colors Blue
+' colors Chocolate
+' colors orange
+' https://plantuml.com/theme-gallery
+help themes
+@enduml
+
+' skinparam package<<container>> {
+'     StereotypeFontColor #FFFFFF
+'     FontStyle plain
+' }

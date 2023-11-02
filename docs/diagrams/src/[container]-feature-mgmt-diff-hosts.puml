@@ -1,0 +1,42 @@
+@startuml C4_Elements
+' !include <C4/C4_Container>
+' !include C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+' !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+' skinparam wrapWidth auto
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!include DEVICONS/git.puml
+
+hide stereotype
+
+header [Container diagram]
+title cpGitOps operator - Management: Hosts
+
+AddElementTag("cp",  $bgColor="#DA1572")
+AddBoundaryTag("cp",  $borderColor="#DA1572", $borderStyle=0, $borderThickness=3)
+
+Boundary(ssot_group, "Single Source of Truth") {
+    System_Ext(ssot, "SCM (Git)", "Single Source of Truth", $sprite="git,scale=0.75")
+    rectangle rect_mgmt [
+    == Management assets
+    ' ..
+    {{
+        hide stereotype
+        Container_Ext(mgmt_api, "api")
+        Container_Ext(mgmt_extra, "Extra (dbedit, etc.)")
+    }}
+    ]
+
+    Lay_D(ssot, rect_mgmt)
+}
+
+System(cpgitops, "cpGitOps", "[VM/Pod/cli]\nDeclarative Security Management", $tags="cp")
+
+
+' SHOW_LEGEND()
+' SHOW_FLOATING_LEGEND(false)
+' Lay_D(ssot, LEGEND())
+' Lay_Distance(ssot_group, LEGEND(), 3)
+
+@enduml

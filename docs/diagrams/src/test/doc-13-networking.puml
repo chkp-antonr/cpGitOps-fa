@@ -1,0 +1,113 @@
+@startuml
+
+' https://plantuml.com/sprite
+' https://plantuml.com/stdlib
+' https://plantuml.com/openiconic
+' https://crashedmind.github.io/PlantUMLHitchhikersGuide/NetworkUsersMachines/NetworkUsersMachines.html
+
+!include <office/Servers/application_server>
+!include <office/Servers/database_server>
+!include <office/Devices/router>
+
+!define osaPuml https://raw.githubusercontent.com/Crashedmind/PlantUML-opensecurityarchitecture2-icons/master
+!include osaPuml/Common.puml
+' !include osaPuml/User/all.puml
+' !include osaPuml/Hardware/all.puml
+!include osaPuml/Misc/all.puml
+' !include osaPuml/Server/all.puml
+' !include osaPuml/Site/all.puml
+
+sprite $cplogo [64x64/4z] {
+nPG7akCm40C9uFzlljl0pMmRfTWLBQcDuP2SSGEofHrsNh0sslb4-_J4s_GT5UGN--8JxujFzlg-qbVhwvrD-NA-iFNOrqBcJ_oa_yuIOm7wPHE2JsXnc6FI
+HIgtmAsUPOjLwreTZr7hASxrBj_xV6MVdsTeNtpSnJDrlA60ilby0wloXTrGK_uCyJBUcjzp-NoStcDiEq6Vp-EFLGfyuO7GYux-ulbYyRmLYrEYtxfI-3Jb
+vZU5FxFy-GUUYw_zM3DIinfz5WE-uRZX1mAVGlJOLptn9ztrXuJMD_gkXY_xwkON-gFp1U_LpjyYlkgWYZd6Hq1k1hbJmZEyGeEeT0-cr9bIPzpfZBlMCJA7
+TmZi7Xdi7jcVhiOcD1ddyny
+}
+
+nwdiag {
+  // define group outside of network definitions
+  internet [shape = cloud]
+  router [description = "<$router>\n Router"]
+  fw [description = "<$osa_firewall>\n<$cplogo*0.4,color=#d8085e>Firewall"]
+  internet -- router
+  router -- fw
+
+  group {
+    color = "#FFAAAA";
+
+    web_01;
+    web_02;
+    db_01;
+  }
+
+  network dmz {
+    web_01;
+    web_02;
+    fw
+  }
+  network internal {
+    web_01;
+    web_02;
+    db_01;
+    db_02;
+  }
+
+  network Sample_front {
+    address = "192.168.10.0/24"
+    color = "red"
+    // define group
+    group web {
+      web01 [address = ".1, .2", shape = "node"]
+      web02 [address = "192.168.10.2",  description = "<$application_server>\n web02"]
+    }
+  }
+
+  network Sample_back {
+    address = "192.168.20.0/24"
+    color = "palegreen"
+    web01 [address = ".1"]
+    web02 [address = "192.168.20.2"]
+    db01 [address = ".101", shape = database ]
+    db02 [address = ".102"]
+
+    // define network using defined nodes
+    group db {
+      db01;
+      db02;
+    }
+  }
+
+  network Network1 {
+    Actor       [shape = actor]
+    Agent       [shape = agent]
+    Artifact    [shape = artifact]
+    Boundary    [shape = boundary]
+    Card        [shape = card]
+    Cloud       [shape = cloud]
+    Collections [shape = collections]
+    Component   [shape = component]
+  }
+  network Network2 {
+    Control     [shape = control]
+    Database    [shape = database]
+    Entity      [shape = entity]
+    File        [shape = file]
+    Folder      [shape = folder, description="Long\nText"]
+    Frame       [shape = frame]
+    Hexagon     [shape = hexagon]
+    Interface   [shape = interface]
+  }
+  network Network3 {
+    Label       [shape = label]
+    Node        [shape = node]
+    Package     [shape = package]
+    Person      [shape = person]
+    Queue       [shape = queue]
+    Stack       [shape = stack]
+    Rectangle   [shape = rectangle]
+    Storage     [shape = storage]
+    Usecase     [shape = usecase]
+  }
+}
+
+@enduml

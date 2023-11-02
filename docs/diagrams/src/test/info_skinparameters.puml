@@ -1,0 +1,4 @@
+@startuml
+' https://plantuml-documentation.readthedocs.io/en/latest/formatting/all-skin-params.html
+skinparameters
+@enduml

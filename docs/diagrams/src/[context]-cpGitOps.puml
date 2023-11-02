@@ -1,0 +1,42 @@
+@startuml C4_Elements
+' https://github.com/plantuml-stdlib/C4-PlantUML/tree/master
+!include <C4/C4_Container>
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+' !define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include DEVICONS/git.puml
+
+' header Header
+title [System context] cpGitOps operator
+
+' LAYOUT_TOP_DOWN()
+' LAYOUT_LEFT_RIGHT()
+' LAYOUT_LANDSCAPE()
+' LAYOUT_WITH_LEGEND()
+
+AddElementTag("cp",  $bgColor="#DA1572")
+
+Person_Ext(requestor, "Requestor", "Create a request")
+System_Ext(portal, "Self-service portal", "[ServiceNow, Custom]")
+System_Ext(ssot, "SCM (Git)", "Single Source of Truth", $sprite="git,scale=0.75")
+System(cpgitops, "cpGitOps", "[VM/Pod/cli]\nDeclarative Security Management", $tags="cp")
+
+Boundary(cpassets, "Check Point assets") {
+    Container(gaia, "GAIA", "clish")
+    Container(os, "OS", "files")
+    Container(cmd, "Commands", "commands get/set")
+    Container(api, "API", "Management API")
+    Container(mgmt_extra, "Extra Mgmt settings", "dbedit, etc.")
+}
+
+Rel_R(requestor, portal, "Web", "Create Request")
+Rel_R(portal, ssot, "Commit", "Pull request")
+Rel_D(ssot, cpgitops, "Config", "Full, Updates")
+Rel_U(cpgitops, ssot, "Update", "Last configuration/Sync")
+Rel_U(cpgitops, portal, "Update", "Ticket status")
+Rel_D(cpgitops, cpassets, "Update", "Configs")
+Rel_U(cpassets, cpgitops, "Retrieve", "Configs")
+
+' SHOW_LEGEND()
+SHOW_FLOATING_LEGEND()
+Lay_Distance(cpassets, LEGEND(), 1)
+@enduml

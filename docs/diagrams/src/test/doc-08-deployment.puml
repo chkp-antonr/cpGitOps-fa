@@ -1,0 +1,350 @@
+@startuml
+
+' hide Stereotype
+
+<style>
+' componentDiagram {
+'   BackGroundColor palegreen
+'   LineThickness 2
+'   LineColor red
+' }
+' document {
+'   BackGroundColor white
+' }
+.stereo {
+  BackgroundColor palegreen
+}
+actor {
+  BackGroundColor #f80c12
+  LineThickness 1
+  LineColor black
+}
+agent {
+  BackGroundColor #f80c12
+  LineThickness 1
+  LineColor black
+}
+artifact {
+  BackGroundColor #ee1100
+  LineThickness 1
+  LineColor black
+}
+boundary {
+  BackGroundColor #ee1100
+  LineThickness 1
+  LineColor black
+}
+card {
+  BackGroundColor #ff3311
+  LineThickness 1
+  LineColor black
+}
+circle {
+  BackGroundColor #ff3311
+  LineThickness 1
+  LineColor black
+}
+cloud {
+  BackGroundColor #ff4422
+  LineThickness 1
+  LineColor black
+}
+collections {
+  BackGroundColor #ff4422
+  LineThickness 1
+  LineColor black
+}
+component {
+  BackGroundColor #ff6644
+  LineThickness 1
+  LineColor black
+}
+control {
+  BackGroundColor #ff6644
+  LineThickness 1
+  LineColor black
+}
+database {
+  BackGroundColor #ff9933
+  LineThickness 1
+  LineColor black
+}
+entity {
+  BackGroundColor #feae2d
+  LineThickness 1
+  LineColor black
+}
+file {
+  BackGroundColor #feae2d
+  LineThickness 1
+  LineColor black
+}
+folder {
+  BackGroundColor #ccbb33
+  LineThickness 1
+  LineColor black
+}
+frame {
+  BackGroundColor #d0c310
+  LineThickness 1
+  LineColor black
+}
+hexagon {
+  BackGroundColor #aacc22
+  LineThickness 1
+  LineColor black
+}
+interface {
+  BackGroundColor #69d025
+  LineThickness 1
+  LineColor black
+}
+label {
+  BackGroundColor black
+  LineThickness 1
+  LineColor black
+}
+node {
+  BackGroundColor #22ccaa
+  LineThickness 1
+  LineColor black
+}
+package {
+  BackGroundColor #12bdb9
+  LineThickness 1
+  LineColor black
+}
+person {
+  BackGroundColor #11aabb
+  LineThickness 1
+  LineColor black
+}
+queue {
+  BackGroundColor #11aabb
+  LineThickness 1
+  LineColor black
+}
+rectangle {
+  BackGroundColor #4444dd
+  LineThickness 1
+  LineColor black
+}
+stack {
+  BackGroundColor #3311bb
+  LineThickness 1
+  LineColor black
+}
+storage {
+  BackGroundColor #3b0cbd
+  LineThickness 1
+  LineColor black
+}
+usecase {
+  BackGroundColor #442299
+  LineThickness 1
+  LineColor black
+}
+</style>
+
+actor actor
+actor/ "actor/"
+agent agent
+artifact artifact
+boundary boundary
+card card
+circle circle
+cloud cloud
+collections collections
+component component << stereo >>
+control control
+database database
+entity entity
+file file
+folder folder
+frame frame
+hexagon hexagon
+interface interface
+label label
+node node
+package package
+person person
+queue queue
+rectangle rectangle
+stack stack
+storage storage
+usecase usecase
+usecase/ "usecase/"
+
+folder folder2 [
+This is a <b>folder
+----
+You can use separator
+====
+of different kind
+....
+and style
+<i><color:blue>(add from V1.2020.7)</color></i>
+]
+
+newpage
+
+artifact artifact1
+artifact artifact2
+artifact artifact3
+artifact artifact4
+artifact artifact5
+artifact artifact6
+artifact artifact7
+artifact artifact8
+artifact artifact9
+artifact artifact10
+artifact1 --> artifact2
+artifact1 --* artifact3
+artifact1 --o artifact4
+artifact1 --+ artifact5
+artifact1 --# artifact6
+artifact1 -->> artifact7
+artifact1 --0 artifact8
+artifact1 --^ artifact9
+artifact1 --(0 artifact10
+
+newpage
+
+cloud cloud1
+cloud cloud2
+cloud cloud3
+cloud cloud4
+cloud cloud5
+cloud1 -0- cloud2
+cloud1 -0)- cloud3
+cloud1 -(0- cloud4
+cloud1 -(0)- cloud5
+
+newpage
+
+actor foo1
+actor foo2
+foo1 <-0-> foo2
+foo1 <-(0)-> foo2
+
+(ac1) -le(0)-> left1
+ac1 -ri(0)-> right1
+ac1 .up(0).> up1
+ac1 ~up(0)~> up2
+ac1 -do(0)-> down1
+ac1 -do(0)-> down2
+
+actor1 -0)- actor2
+
+component comp1
+component comp2
+comp1 *-0)-+ comp2
+[comp3] <-->> [comp4]
+
+boundary b1
+control c1
+b1 -(0)- c1
+
+component comp1
+interface interf1
+comp1 #~~( interf1
+
+:mode1actor: -0)- fooa1
+:mode1actorl: -ri0)- foo1l
+
+[component1] 0)-(0-(0 [componentC]
+() component3 )-0-(0 "foo" [componentC]
+
+[aze1] #-->> [aze2]
+
+newpage
+
+title Bracketed line style mix
+node foo
+foo --> bar                             : ∅
+foo -[#red,thickness=1]-> bar1          : [#red,1]
+foo -[#red,dashed,thickness=2]-> bar2   : [#red,dashed,2]
+foo -[#green,dashed,thickness=4]-> bar3 : [#green,dashed,4]
+foo -[#blue,dotted,thickness=8]-> bar4  : [blue,dotted,8]
+foo -[#blue,plain,thickness=16]-> bar5  : [blue,plain,16]
+foo -[#blue;#green,dashed,thickness=4]-> bar6  : [blue;green,dashed,4]
+
+newpage
+node foo
+foo --> bar : normal
+foo --> bar1 #line:red;line.bold;text:red  : red bold
+foo --> bar2 #green;line.dashed;text:green : green dashed
+foo --> bar3 #blue;line.dotted;text:blue   : blue dotted
+
+agent a
+cloud c #pink;line:red;line.bold;text:red [
+c
+cloud description
+]
+file  f #palegreen;line:green;line.dashed;text:green {
+[c1]
+[c2]
+}
+frame frame {
+node  n #aliceblue;line:blue;line.dotted;text:blue
+}
+
+newpage
+
+artifact artifact {
+card card {
+cloud cloud {
+component component {
+database database {
+file file {
+folder folder {
+frame frame {
+hexagon hexagon {
+node node {
+package package {
+queue queue {
+rectangle rectangle {
+stack stack {
+storage storage {
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+
+newpage
+
+[i]
+node node {
+  portin p1
+  portin p2
+  portin p3
+  portout po1
+  portout po2
+  portout po3
+  file f1
+}
+[o]
+
+i --> p1
+i --> p2
+i --> p3
+p1 --> f1
+p2 --> f1
+po1 --> o
+po2 --> o
+po3 --> o
+f1 --> po1
+
+
+@enduml

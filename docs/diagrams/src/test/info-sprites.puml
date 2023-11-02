@@ -1,0 +1,47 @@
+@startuml
+!define osaPuml https://raw.githubusercontent.com/Crashedmind/PlantUML-opensecurityarchitecture2-icons/master
+!include osaPuml/Common.puml
+!include osaPuml/User/all.puml
+!include osaPuml/Hardware/all.puml
+!include osaPuml/Misc/all.puml
+!include osaPuml/Server/all.puml
+!include osaPuml/Site/all.puml
+'Adapted from https://github.com/Crashedmind/PlantUML-opensecurityarchitecture-icons/blob/master/all
+scale .5
+' !include <osa/arrow/green/left/left>
+' !include <osa/arrow/yellow/right/right>
+' !include <osa/awareness/awareness>
+' !include <osa/contract/contract>
+' !include <osa/database/database>
+' !include <osa/desktop/desktop>
+' !include <osa/desktop/imac/imac>
+' !include <osa/device_music/device_music>
+' !include <osa/device_scanner/device_scanner>
+' !include <osa/device_usb/device_usb>
+' !include <osa/device_wireless_router/device_wireless_router>
+' !include <osa/disposal/disposal>
+' !include <osa/drive_optical/drive_optical>
+' !include <osa/firewall/firewall>
+' !include <osa/hub/hub>
+' !include <osa/ics/drive/drive>
+' !include <osa/ics/plc/plc>
+' !include <osa/ics/thermometer/thermometer>
+' !include <osa/id/card/card>
+' !include <osa/laptop/laptop>
+' !include <osa/lifecycle/lifecycle>
+' !include <osa/lightning/lightning>
+' !include <osa/media_flash/media_flash>
+' !include <osa/media_optical/media_optical>
+' !include <osa/media_tape/media_tape>
+' !include <osa/mobile/pda/pda>
+' !include <osa/padlock/padlock>
+' !include <osa/printer/printer>
+' !include <osa/site_branch/site_branch>
+' !include <osa/site_factory/site_factory>
+' !include <osa/vpn/vpn>
+' !include <osa/wireless/network/network>
+
+listsprites
+' From The Hitchhiker’s Guide to PlantUML
+' title Use of sprites <$osa_cloud>
+@enduml
