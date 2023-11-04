@@ -15,6 +15,7 @@ from include.cpf import router as router_cpf # to see in docs
 from app_gateway.gw_router import router as router_gateway
 from app_management.mgmt_router import router as router_management
 from app_ticket.tkt_router import router as router_ticket
+from app_test.test_router import router as router_test
 from include.cgl import logger, settings, prepare_logger
 # https://github1s.com/artemonsh/fastapi_course/blob/main/Lesson_12/src/main.py#L3
 
@@ -49,6 +50,7 @@ app.include_router(router_cpf)
 app.include_router(router_cpg)
 app.include_router(router_gateway)
 app.include_router(router_management)
+app.include_router(router_test)
 app.include_router(router_ticket)
 
 origins = [
@@ -79,13 +81,6 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/")
 def index(request: Request):
     content = "Main page"
-    # # for tests
-    # from src import schemas as sch
-    # from include import cpf
-    # res = cpf.Mgmt().fetch_packages_dmn("mdmPrime", dmn="cpGitOps")
-    # status, client = cpf.Mgmt().login(sch.ManagementToLogin(name="mdmPrime", dmn="cpGitOps"))
-    # content=status
-
     return templates.TemplateResponse("index.html", {
         "title":"Main page",
         "content": content,

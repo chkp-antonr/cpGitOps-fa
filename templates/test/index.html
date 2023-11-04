@@ -1,0 +1,17 @@
+{% extends "test/layout.html" %}
+
+{% block content %}
+  <p class="text-xl">Test view</p>
+  <p class="text-lg">Something.</p>
+  <p>AJAX test. </p>
+  <hr class="my-2" />
+
+  <button class="button mx-3 w-44" title="Update SSoT directory structure from API"
+    onclick="btn_click('', 'test_ajax')">Test AJAX update</button>
+
+  <pre class="text-xs text-gray">
+    {{ content }}
+  </pre>
+
+  <hr class="my-3" />
+{% endblock content %}

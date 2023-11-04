@@ -6,6 +6,7 @@ import yaml
 import json
 from time import sleep
 from fastapi import APIRouter
+import asyncio
 #
 from cpapi import APIClient, APIClientArgs, APIResponse
 from include.cgl import logger
@@ -72,7 +73,7 @@ class Mgmt():
             # Check if login still valid
             response = cached_login.client.api_call("show-api-versions")
             if not response.success: # expired
-                logger.error(f"Invalidating login to {server_to_login.dmn}@{matched_server.name}")
+                logger.error(f"Invalidating login to {server_to_login.dmn}@{cached_login.name}")
                 cached_login.client = None # invalidate client
                 return self.login(server_to_login) # call again and return
             logger.info(f"Found cached login for "
@@ -139,7 +140,7 @@ class Mgmt():
                                 domain = dmn)
             if not res.success \
                 and "err_too_many_requests" in res.error_message:
-                logger.debug(f"Login: err_too_many_requests. Try {count}")
+                logger.debug(f"Login to {dmn}: err_too_many_requests. Try {count}")
                 sleep(5)
             else:
                 break
@@ -255,7 +256,7 @@ class Mgmt():
             acc_layers_in_pkg = pkg_details.data.get("access-layers", [])
             for acc_layer in acc_layers_in_pkg:
                 acc_layer_name = acc_layer['name']
-                logger.debug(f"Retrieving details for access-rulebase {acc_layer_name} in {pkg_name}")
+                # logger.debug(f"Retrieving details for access-rulebase {acc_layer_name} in {pkg_name}")
                 access_rulebase = client.api_call("show-access-rulebase", {
                         "name": acc_layer_name,
                         "details-level": "full",
@@ -281,7 +282,7 @@ class Mgmt():
                 logger.error(f"Can't write {file_name}: {e}")
         return # fetch_packages_dmn ToDo add ApiResponse
 
-    def fetch_api_dmn(self, mdm_server:Text, dmn:Text="") -> ApiStatus:
+    async def fetch_api_dmn(self, mdm_server:Text, dmn:Text="", message=[""]) -> ApiStatus:
         """Fetch show-* from API and saves to TEMPCURR
 
         :param Text mdm_server: MDM server fqdn or name
@@ -298,6 +299,8 @@ class Mgmt():
         # commands = ["show-hosts"]
         for command in commands:
             logger.debug(f"{command} on DMN {mdm_server}/{dmn}")
+            message[0] = f"<p><i>{command}</i> on {mdm_server}/{dmn}</p>"
+            await asyncio.sleep(0.5)
             response = client.api_query(command, details_level="full")
             # logger.debug(f"{command} on DMN {mdm_server}/{dmn}\n{strip_res_obj(response)}\n")
 
@@ -310,6 +313,8 @@ class Mgmt():
                 logger.error(f"Can't write {file_name}: {e}")
 
         # fetch policies
+        message[0] = f"<p>Fetching packages from {mdm_server}/{dmn}</p>"
+        await asyncio.sleep(0.5)
         self.fetch_packages_dmn(mdm_server, dmn)
 
         result = ApiStatus(success=True, comment="Test OK", status_code=201)
@@ -384,15 +389,15 @@ def update_ssot_mgmt_domains(mdm_server:Text) -> Dict[Text, List[Text]]:
 
 @router.get("/fetch_api_mgmt_domains/{mdm_server}",
             description="Fetch all jsons from API to TEMPCURR from the domain by fqdn or name")
-def fetch_api_mgmt_domains(mdm_server:Text) -> Dict[Text, List[Text]]:
+async def fetch_api_mgmt_domains(mdm_server:Text, message=[""]) -> Dict[Text, List[Text]]:
     # Use checkboxes to select domains?
     domain_names = [domain[0] for domain in show_domains(mdm_server)]
     domain_names.append("Global")
 
     for dmn in domain_names:
-        logger.warning(dmn)
-        res = Mgmt().fetch_api_dmn(mdm_server, dmn=dmn)
+        await Mgmt().fetch_api_dmn(mdm_server, dmn=dmn, message=message)
 
+    message[0] = ""
     result = {
         "updated_domains": [],
         "not_updated_domains": []
@@ -400,87 +405,3 @@ def fetch_api_mgmt_domains(mdm_server:Text) -> Dict[Text, List[Text]]:
     return result # fetch_last_mgmt_domains
 
 #endregion cpf
-
-
-# def get_policy_components(
-#         device_name: Text, device_ip: Text, domain: Text, url: Text, api_key: Text, output_path: Text, logger,
-# ) -> None:
-
-#     # Notes:
-#     # "show-packages" gets the policy package list
-#     #
-#     # "show-package"  gets a specific policy package. this will have a list of access-layers, which needs to get fed
-#     # into `show-access-rulebase` API call to get details of the layer (sections, inline layers, rules)
-#     #
-#     # "show-access-rulebase" should return everything we need in terms of access rules.
-#     # According to their API docs:
-#     # Shows the entire Access Rules layer. This layer is divided into sections. An Access Rule may be within a
-#     # section, or independent of a section (in which case it is said to be under the "global" section).
-#     # The reply features a list of objects. Each object may be a section of the layer, with all its rules in,
-#     # or a rule itself, for the case of rules which are under the global section. An optional "filter" field
-#     # may be added in order to filter out only those rules that match a search criteria. So we don't need to
-#     # worry about using `show-access-layers`, `show-access-sections` or `show-access-rule` APIs
-#     #
-#     # "show-nat-rulebase" should return everything we need in terms of nat rules. it needs a package name as input
-#     # According to their API docs:
-#     # Shows the entire NAT Rules layer. This layer is divided into sections. A NAT Rule may be within a section,
-#     # or independent of a section (in which case it is said to be under the "global" section). There are two
-#     # types of sections: auto generated read only sections and general sections which are created manually.
-#     # The reply features a list of objects. Each object may be a section of the layer, within which its rules
-#     # may be found, or a rule itself, for the case of rules which are under the global section. An optional
-#     # "filter" field may be added in order to filter out only those rules that match a search criteria.
-#     # So we don't need to worry about using `show-nat-section` or `show-nat-rule` APIs
-
-#     # retrieve list of packages
-#     logger.info(f"Getting list of packages in domain {domain}")
-#     packages_list = api_call(url, "show-packages", {"details-level": "full"}, api_key, pagination=True, logger=logger)
-#     save_output_to_file(
-#         device_name, domain, "show-packages", packages_list, output_path
-#     )
-
-#     # retrieve details of each package
-
-#     # packages_list can have multiple package dictionaries embedded in it, due to the nature of data collection
-#     # and pagination. So have to loop through all of the dictionaries in it and find the list of packages in
-#     # each entry
-#     for packages in packages_list:
-#         for package in packages['packages']:
-#             logger.debug(f"Retrieving details for package {package} in domain {domain} on {device_name}")
-#             pkg_name = package['name']
-#             pkg_uid = package['uid']
-#             pkg_details = api_call(url, "show-package", {"name": pkg_name, "details-level": "full"},
-#                                    api_key, pagination=False, logger=logger)
-#             save_output_to_package_file(
-#                 device_name, domain, pkg_name, "show-package", pkg_details,
-#                 output_path)
-
-#             logger.debug(f"Package {pkg_name} details: {pkg_details}")
-#             if len(pkg_details) != 1:
-#                 # API doesn't support pagination so results is a list with a single element
-#                 exc_str = f"Call to get {pkg_name} details returned list that is not a single element"
-#                 logger.error(exc_str)
-#                 raise Exception(exc_str)
-
-#             access_layers = []  # collect output of `show-access-rulebase` for each layer in package and append here
-#             _acc_layers = pkg_details[0].get("access-layers", [])
-#             for _acc_layer in _acc_layers:
-#                 acc_layer_name = _acc_layer['name']
-#                 logger.info(f"Retrieving access-rule-base {acc_layer_name} in package {pkg_name} "
-#                              f"in domain {domain} on {device_name}")
-#                 access_rulebase = api_call(url, "show-access-rulebase",
-#                                            {"name": acc_layer_name, "details-level": "full", "use-object-dictionary": True},
-#                                            api_key, pagination=True, logger=logger)
-#                 access_layers.extend(access_rulebase)
-
-#             save_output_to_package_file(
-#                 device_name, domain, pkg_name, "show-access-rulebase", access_layers, output_path
-#             )
-
-#             logger.info(f"Retrieving nat-rulebase in package {pkg_name} in domain {domain} on {device_name}")
-#             nat_rules = api_call(url, "show-nat-rulebase",
-#                                  {"package": pkg_name, "details-level": "full", "use-object-dictionary": True},
-#                                 api_key,  pagination=True, logger=logger)
-
-#             save_output_to_package_file(
-#                 device_name, domain, pkg_name, "show-nat-rulebase", nat_rules, output_path
-#             )

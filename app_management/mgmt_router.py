@@ -1,6 +1,8 @@
 import yaml
 from fastapi import APIRouter, Request #, Form, Depends
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
+import asyncio
 
 from include import cpg
 from include import cpf
@@ -12,7 +14,7 @@ router = APIRouter(
 )
 
 templates = Jinja2Templates(directory="templates")
-
+message = [""]
 
 @router.get("/")
 def mgmt_index(request: Request):
@@ -33,9 +35,10 @@ def mgmt_dashboard(request: Request):
         "title":"Dashboard",
         "request": request})
 
-@router.get("/show_domains/",
-            description="{mgmt_server} Mgmt server name to filter by, actions:[update_ssot,fetch_api]")
-def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
+@router.get("/show_domains/")
+@router.get("/show_domains/{mgmt_server}",
+            description="Mgmt server name to filter by, actions:[update_ssot,fetch_api]")
+async def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
     # logger.debug(request.url.path)
     list_domains = cpg.list_mgmt_domains()
     mgmt_servers = [server.descr_file.annotation.name for server in list_domains
@@ -54,9 +57,12 @@ def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
         logger.info("Update SSoT")
         update_ssot_result = cpf.update_ssot_mgmt_domains(mgmt_server)
     elif action == "fetch_api":
-        logger.warning("Fetch from API")
-        fetch_last_result = cpf.fetch_api_mgmt_domains(mgmt_server)
-
+        logger.error("Fetch from API")
+        # fetch_last_result = cpf.fetch_api_mgmt_domains(mgmt_server, message)
+        asyncio.create_task(cpf.fetch_api_mgmt_domains(mgmt_server, message))
+        logger.error('Redirecting')
+        content = "Fetching from API"
+        return RedirectResponse("?get_status")
 
     return templates.TemplateResponse(router.prefix+"/show_domains.html", {
         "title": "Show domains",
@@ -81,3 +87,8 @@ def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
 #         "title":"Asset details",
 #         "content": f"<p>Mgmt_server: {mgmt_server}</p><p>DMN {dmn}</p><p>Asset {asset}</p>",
 #         })
+
+@router.get("/get_status")
+async def test_get_status(request: Request, action:str=""):
+    # logger.debug(message[0])
+    return { "message": message[0] }

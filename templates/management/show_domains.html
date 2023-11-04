@@ -12,30 +12,34 @@
     <select id="mgmt_server" class="px-2 py-1 mx-2 border-2 shadow-md inline-block">
       <option value="">Select server</option>
       {% for server in mgmt_servers %}
-      <option value="{{ request.path }}?mgmt_server={{ server }}"
+      <option value="{{ server }}"
         {% if mgmt_server %}selected{% endif %}>{{ server }}</option>
       {% endfor %}
     </select>
     <button name="update_ssot_dirs" class="button mx-3 w-44" title="Update SSoT directory structure from API"
-      onclick="btn_click(this, 'update_ssot_dirs')">SSoT Dir update</button>
+      onclick="btn_click(`?mgmt_server=${document.getElementById('mgmt_server').value}&action=update_ssot_dirs`)">
+      SSoT Dir update
+    </button>
     <button name="fetch_api" class="button mx-3 w-44" title="Fetch objects and packages from API to CURRTEMP"
-      onclick="btn_click(this, 'fetch_api')">Fetch from API</button>
+      onclick="btn_click(`?mgmt_server=${document.getElementById('mgmt_server').value}&action=fetch_api`)">
+      Fetch from API
+    </button>
   </div>
 
 <script>
-  function btn_click(element, action) {
-    const baseUrl = window.location.origin; // Get the base URL
-    const selectedValue = document.getElementById("mgmt_server").value;
-    if (selectedValue) {
-      const newUrl = `${selectedValue}&action=${action}`;
-      window.location.href = newUrl;
-    }
-  };
+  // function btn_click(element, action) {
+  //   const baseUrl = window.location.origin; // Get the base URL
+  //   const selectedValue = document.getElementById("mgmt_server").value;
+  //   if (selectedValue) {
+  //     const newUrl = `${selectedValue}&action=${action}`;
+  //     window.location.href = newUrl;
+  //   }
+  // };
   document.getElementById("mgmt_server").addEventListener('change', function () {
     const baseUrl = window.location.pathname; // Get the base URL
     const selectedValue = this.value;
     if (selectedValue) {
-      const newUrl = `${selectedValue}`;
+      const newUrl = `?mgmt_server=${selectedValue}`;
       window.location.href = newUrl;
     }
   });
