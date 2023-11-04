@@ -15,7 +15,7 @@ from include.cpf import router as router_cpf # to see in docs
 from app_gateway.gw_router import router as router_gateway
 from app_management.mgmt_router import router as router_management
 from app_ticket.tkt_router import router as router_ticket
-from app_test.test_router import router as router_test
+from app_tst.tst_router import router as router_tst
 from include.cgl import logger, settings, prepare_logger
 # https://github1s.com/artemonsh/fastapi_course/blob/main/Lesson_12/src/main.py#L3
 
@@ -50,7 +50,7 @@ app.include_router(router_cpf)
 app.include_router(router_cpg)
 app.include_router(router_gateway)
 app.include_router(router_management)
-app.include_router(router_test)
+app.include_router(router_tst)
 app.include_router(router_ticket)
 
 origins = [

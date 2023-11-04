@@ -4,7 +4,6 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from random import randint
 import asyncio
-import time
 
 from include import cpg
 from include import cpf
@@ -19,7 +18,7 @@ templates = Jinja2Templates(directory="templates")
 
 message = ""
 
-async def test_action(action=""):
+async def tst_action(action=""):
     global message
 
     for i in range(10,20):
@@ -33,9 +32,9 @@ async def test_action(action=""):
     return
 
 @router.get("/")
-async def test_index(request: Request, action="", get_status=None):
-    if not hasattr(test_index, "iter_no"):
-      test_index.iter_no = 0  # it doesn't exist yet, so initialize it
+async def tst_index(request: Request, action="", get_status=None):
+    # if not hasattr(test_index, "iter_no"):
+    #   tsst_index.iter_no = 0  # it doesn't exist yet, so initialize it
     # try:
     #     print(test_index.iter_no)
     # except NameError:
@@ -53,7 +52,7 @@ async def test_index(request: Request, action="", get_status=None):
     #
     logger.error(f"'{action}' - '{get_status}'")
     if action and (get_status is None):
-        test_index.iter_no += 1
+        # tst_index.iter_no += 1
         # run something
         logger.info('Calling test_action')
         asyncio.create_task(test_action())
@@ -66,7 +65,7 @@ async def test_index(request: Request, action="", get_status=None):
         "request": request})
 
 @router.get("/get_status")
-async def test_get_status(request: Request, action:str=""):
+async def tst_get_status(request: Request, action:str=""):
 
     # status_updates = []
     # for i in range(5):
