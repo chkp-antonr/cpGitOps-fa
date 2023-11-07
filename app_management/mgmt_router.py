@@ -38,19 +38,23 @@ def mgmt_dashboard(request: Request):
 @router.get("/show_domains/")
 @router.get("/show_domains/{mgmt_server}",
             description="Mgmt server name to filter by, actions:[update_ssot,fetch_api]")
-async def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
+async def mgmt_show_domains(request: Request, mgmt_server=None, action="", dmn=None):
     # logger.debug(request.url.path)
     list_domains = cpg.list_mgmt_domains()
     mgmt_servers = [server.descr_file.annotation.name for server in list_domains
                     if server.descr_file.annotation.kind == "MDM"]
     content = "Select Management server to refresh its domains"
-    if mgmt_server:
-        matched = next((server for server in list_domains
-                        if server.descr_file.annotation.name == mgmt_server), None)
-        if matched:
-            domains = [dmn[0] for dmn in cpf.show_domains(mgmt_server)]
-            content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
-                      f"<p>Domains on MDM: {domains}</p>"
+    update_ssot_result = None
+    try:
+        if mgmt_server:
+            matched = next((server for server in list_domains
+                            if server.descr_file.annotation.name == mgmt_server), None)
+            if matched:
+                domains = [dmn[0] for dmn in cpf.show_domains(mgmt_server)]
+                content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
+                        f"<p>Domains on MDM: {domains}</p>"
+    except AssertionError as e:
+        logger.error(f"show_domains: {e}")
 
     update_ssot_result = {}
     if action == "update_ssot_dirs":
@@ -59,7 +63,7 @@ async def mgmt_show_domains(request: Request, mgmt_server=None, action=""):
     elif action == "fetch_api":
         logger.error("Fetch from API")
         # fetch_last_result = cpf.fetch_api_mgmt_domains(mgmt_server, message)
-        asyncio.create_task(cpf.fetch_api_mgmt_domains(mgmt_server, message))
+        asyncio.create_task(cpf.fetch_api_mgmt_domains(mgmt_server, dmn, message))
         logger.error('Redirecting')
         content = "Fetching from API"
         return RedirectResponse("?get_status")

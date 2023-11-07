@@ -92,7 +92,7 @@ class Mgmt():
                           if server.name == server_to_login.name), None)
 
         if matched_server is not None:
-            client_args = APIClientArgs(server=matched_server.server_ip,
+            client_args = APIClientArgs(server=matched_server.server_ip.compressed,
                 unsafe_auto_accept=unsafe_auto_accept, http_debug_level=HTTP_DEBUG_LEVEL)
             client = APIClient(client_args)
             mgmt_server_info = matched_server.copy()
@@ -107,16 +107,24 @@ class Mgmt():
             else:
                 mgmt_server_info = self.get_mgmt_server_login_info(server_to_login.name)
             # Preliminary prep and check (for New server only)
-            client_args = APIClientArgs(server=mgmt_server_info.server_ip,
+            client_args = APIClientArgs(server=mgmt_server_info.server_ip.compressed,
                 unsafe_auto_accept=unsafe_auto_accept, http_debug_level=HTTP_DEBUG_LEVEL)
             client = APIClient(client_args)
-            if client.check_fingerprint() is False:
-                logger.critical(
-                        f"{mgmt_server_info.name}: Could not get the server's fingerprint -"
-                        f"Check connectivity with the server.")
-                return ApiStatus(success=False,
-                        error_message=f"{mgmt_server_info.name}: Could not get the server's fingerprint",
+            try:
+                if client.check_fingerprint() is False:
+                    logger.critical(
+                            f"{mgmt_server_info.name}: Could not get the server's fingerprint -"
+                            f"Check connectivity with the server.")
+                    result = ApiStatus(success=False,
+                            error_message=f"{mgmt_server_info.name}: Could not get the server's fingerprint",
+                            comment="Check connectivity with the server.")
+                    return (result, None)
+            except AssertionError as e:
+                logger.error(f"check_fingerprint() error. Can't connect? {e}")
+                result = ApiStatus(success=False,
+                        error_message=f"{mgmt_server_info.name} {mgmt_server_info.server_ip}: Could not connect",
                         comment="Check connectivity with the server.")
+                return (result, None)
         mgmt_server_info.dmn = server_to_login.dmn
 
         # Cache credentials (without client yet) if connection is OK
@@ -174,7 +182,7 @@ class Mgmt():
             server_ip=mgmt_descr.annotation.ipv4_address,
             # port: int = 443
             # ToDo replace with credentials from pluginenvenv
-            api_key="attNU1d69sTjjZo3qRIIkg==",
+            api_key=mgmt_descr.credentials.get('gui',{}).get('api_key'),
             username="_api_",
             # password: str = ""
             kind = mgmt_descr.annotation.kind
@@ -323,11 +331,15 @@ class Mgmt():
 def show_domains(mdm_fqdn_name: str) -> List[str]:
     client = Mgmt().login( \
             ManagementToLogin(fqdn=mgmt_get_fqdn(mdm_fqdn_name), dmn="System Data"))[1]
-    res = client.api_call("show-domains", {
-            "limit" : 250,
-            "offset" : 0,
-            "details-level" : "standard"})
-    domains = [(domain['name'], domain) for domain in res.data['objects']]
+    if client is None:
+        logger.error(f"Can't connect to 'System Data'@{mdm_fqdn_name}")
+        return []
+    else:
+        res = client.api_call("show-domains", {
+                "limit" : 250,
+                "offset" : 0,
+                "details-level" : "standard"})
+        domains = [(domain['name'], domain) for domain in res.data['objects']]
     # logger.debug(domains)
     return domains # show_domains
 
@@ -388,10 +400,13 @@ def update_ssot_mgmt_domains(mdm_server:Text) -> Dict[Text, List[Text]]:
 
 @router.get("/fetch_api_mgmt_domains/{mdm_server}",
             description="Fetch all jsons from API to TEMPCURR from the domain by fqdn or name")
-async def fetch_api_mgmt_domains(mdm_server:Text, message=[""]) -> Dict[Text, List[Text]]:
+async def fetch_api_mgmt_domains(mdm_server:Text, dmn=None, message=[""]) -> Dict[Text, List[Text]]:
     # Use checkboxes to select domains?
-    domain_names = [domain[0] for domain in show_domains(mdm_server)]
-    domain_names.append("Global")
+    if dmn is None:
+        domain_names = [domain[0] for domain in show_domains(mdm_server)]
+        domain_names.append("Global")
+    else:
+        domain_names = [dmn]
 
     for dmn in domain_names:
         await Mgmt().fetch_api_dmn(mdm_server, dmn=dmn, message=message)

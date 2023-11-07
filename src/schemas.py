@@ -43,11 +43,10 @@ class DescrManagementDescription(BaseModel):
     name: str
     ipv4_address: IPvAnyAddress = Field(serialization_alias='ipv4-address')
     version: str
-    JHF: Optional[int]
+    JHF: int = None
 
 class DescrManagement(BaseModel):
     """ Full __descr__.yaml for the Management server / MDM """
-
     annotation: DescrManagementDescription
     credentials: Dict = []
 

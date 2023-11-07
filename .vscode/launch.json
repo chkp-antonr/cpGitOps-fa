@@ -13,7 +13,7 @@
                 "host_server": "localhost",
             },
             "jinja": true,
-            "justMyCode": true,
+            "justMyCode": false,
         },
         {
             "name": "Python: FastAPI",
