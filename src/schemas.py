@@ -1,5 +1,5 @@
-from typing import Dict, List, Literal
-from pydantic import BaseModel, Field, SecretStr
+from typing import Dict, List, Literal, Optional
+from pydantic import BaseModel, Field, SecretStr, IPvAnyAddress
 # from dataclasses import dataclass
 from cpapi import APIClient
 
@@ -9,11 +9,11 @@ class DescrGatewayDescription(BaseModel):
     description: str
     kind: Literal['SimpleGW', 'Maestro']
     name: str
-    ipv4_address: str = Field(serialization_alias='ipv4-address')
+    ipv4_address: IPvAnyAddress = Field(serialization_alias='ipv4-address')
     mgmt_name: str # SMS or MDM
     dmn: str = "" # Empty for SMS
     version: str
-    JHF: int = None
+    JHF: Optional[int]
 
 class DescrGateway(BaseModel):
     """ Full __descr__.yaml for the Management server / MDM """
@@ -41,9 +41,9 @@ class DescrManagementDescription(BaseModel):
     description: str
     kind: Literal["MDM", "SMS"]
     name: str
-    ipv4_address: str = Field(serialization_alias='ipv4-address')
+    ipv4_address: IPvAnyAddress = Field(serialization_alias='ipv4-address')
     version: str
-    JHF: int = None
+    JHF: Optional[int]
 
 class DescrManagement(BaseModel):
     """ Full __descr__.yaml for the Management server / MDM """
@@ -59,7 +59,7 @@ class ManagementServerSingle(BaseModel):
 class ManagementServerCachedInfo(BaseModel):
     fqdn: str
     name: str
-    server_ip: str
+    server_ip: IPvAnyAddress
     port: int = 443
     api_key: SecretStr = ""
     username: str = ""

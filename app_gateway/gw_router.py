@@ -14,7 +14,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/")
-def index(request: Request):
+def gw_index(request: Request):
     # gw_list = sorted(cpg.list_gateways(),
     #             key=lambda gw: gw.get('descr_file', {}).get('dmn'), reverse=True)
     gw_list = cpg.list_gateways()

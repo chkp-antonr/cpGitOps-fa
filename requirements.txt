@@ -4,6 +4,7 @@ pydantic-settings
 pyyaml
 pylint
 pytest-env
+pytest-asyncio
 websockets
 
 py2puml

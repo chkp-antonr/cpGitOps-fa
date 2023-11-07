@@ -45,13 +45,12 @@ class Mgmt():
     def __new__(cls):
         if cls.instance is None:
             # Called only once
-            # logger.error("Call once")
             cls.instance = super().__new__(cls)
         return cls.instance  # return existing instance
 
     def login(self, server_to_login:ManagementToLogin=None,
               unsafe_auto_accept=True, force_login=False) -> Tuple[ApiStatus, APIClient]:
-        """ Login to SMS or DMN if not logged
+        """ Return cached APIClient or login to SMS or DMN if not logged yet
 
         :param Dict server_to_login: _description_
         :param bool unsafe_auto_accept: ignore fingerprint check, defaults to True
