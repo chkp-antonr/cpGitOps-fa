@@ -6,7 +6,7 @@ import asyncio
 
 from include import cpg
 from include import cpf
-from include.cgl import logger
+from include.cgl import logger, settings
 
 router = APIRouter(
     prefix="/management",
@@ -38,13 +38,14 @@ def mgmt_dashboard(request: Request):
 @router.get("/show_domains/")
 @router.get("/show_domains/{mgmt_server}",
             description="Mgmt server name to filter by, actions:[update_ssot,fetch_api]")
-async def mgmt_show_domains(request: Request, mgmt_server=None, action="", dmn=None):
+async def mgmt_show_domains(request: Request, mgmt_server=None, action="", domain=""):
     # logger.debug(request.url.path)
     list_domains = cpg.list_mgmt_domains()
     mgmt_servers = [server.descr_file.annotation.name for server in list_domains
                     if server.descr_file.annotation.kind == "MDM"]
     content = "Select Management server to refresh its domains"
     update_ssot_result = None
+    domains = []
     try:
         if mgmt_server:
             matched = next((server for server in list_domains
@@ -61,9 +62,9 @@ async def mgmt_show_domains(request: Request, mgmt_server=None, action="", dmn=N
         logger.info("Update SSoT")
         update_ssot_result = cpf.update_ssot_mgmt_domains(mgmt_server)
     elif action == "fetch_api":
-        logger.error("Fetch from API")
+        logger.info(f"Fetch from API {mgmt_server}/{domain}")
         # fetch_last_result = cpf.fetch_api_mgmt_domains(mgmt_server, message)
-        asyncio.create_task(cpf.fetch_api_mgmt_domains(mgmt_server, dmn, message))
+        asyncio.create_task(cpf.fetch_api_mgmt_domains(mgmt_server, domain, message))
         logger.error('Redirecting')
         content = "Fetching from API"
         return RedirectResponse("?get_status")
@@ -74,16 +75,75 @@ async def mgmt_show_domains(request: Request, mgmt_server=None, action="", dmn=N
         "mgmt_server": mgmt_server,
         "update_ssot_result": update_ssot_result,
         "content": content,
+        "domains": domains,
         "request": request,
     })
 
 
-# def details_dmn(request, mgmt_server, dmn):
-#     return render(request, "management/details_dmn.html", {
-#         "title":"DMN details",
-#         "content": f"<p>Mgmt_server: {mgmt_server}</p><p>DMN {dmn}</p>",
-#         })
+@router.get("/diff/",
+            description="Listbox with available file-names (commands show-*) and policy packages")
+async def mgmt_diff(request: Request, mgmt_server="", domain="", command="", action=""):
+    content = ""
+    commands = []
+    packages = []
+    mgmt_servers = []
+    domains = []
 
+    # Provide a list of available management servers
+    logger.debug("Prepare a list of management servers (in SSoT)")
+    list_domains = cpg.list_mgmt_domains()
+    mgmt_servers = [server.descr_file.annotation.name for server in list_domains
+            if server.descr_file.annotation.kind == "MDM"]
+
+    if mgmt_server:
+        # Managing Server is selected
+        logger.debug(f"Prepare a list of domains (in SSoT) for {mgmt_server}")
+        try:
+            if mgmt_server:
+                matched = next((server for server in list_domains
+                                if server.descr_file.annotation.name == mgmt_server), None)
+                if matched:
+                    domains = [dmn[0] for dmn in cpf.show_domains(mgmt_server)]
+                    domains.append("Global")
+                    content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
+                            f"<p>Domains on MDM: {domains}</p>"
+        except AssertionError as e:
+            logger.error(f"diff/show_domains: {e}")
+
+        commands = cpf.Mgmt().enum_mgmt_api_calls_for_ver()
+
+        if action == "diff":
+            if domain:
+                diff_domains = [domain]
+            else:
+                diff_domains = domains
+            if command:
+                diff_commands = [command]
+            else:
+                diff_commands = commands
+
+            logger.info(f"Find diff for {mgmt_server}/ {diff_domains} {diff_commands}")
+            diff = await cpf.mgmt_diff(mgmt_server, diff_domains, diff_commands)
+            logger.warning(f"\n{diff}")
+            return templates.TemplateResponse(router.prefix+"/diff_show.html", {
+                "title":"Diff show",
+                "content": "",
+                "diff": diff,
+                "request": request})
+
+
+        #     pass
+
+    return templates.TemplateResponse(router.prefix+"/diff.html", {
+        "title":"Diff",
+        "content": content,
+        "mgmt_servers": mgmt_servers,
+        "mgmt_server": mgmt_server,
+        "domains": domains,
+        "domain": domain,
+        "commands": commands,
+        "packages": packages,
+        "request": request})
 
 # def details_asset(request, mgmt_server, dmn, asset):
 #     # asset name or uuid

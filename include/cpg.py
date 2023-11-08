@@ -1,8 +1,9 @@
 """ GitOps-related module """
 
 import os
-from typing import List, Union
+from typing import Dict, List, Text, Union
 import yaml
+import json
 from fastapi import APIRouter
 
 
@@ -158,4 +159,28 @@ def mgmt_get_fqdn(fqdn:str="", name:str="", ) -> str:
     else:
         return mgmt_get_fqdn_by_name(name)
     return None # mgmt_get_fqdn
+
+def load_mgmt_json(mgmt_server:Text, domain:Text, dir_name:Text, file_api_call:Text, package:Text="") -> List[Dict]:
+    try:
+        fdir = f"{settings.DIR_SSOT}/{settings.DIR_MGMT}/{mgmt_get_fqdn(mgmt_server)}/{domain}/{dir_name}"
+        if package:
+            fn = f"{fdir}/{package}/{file_api_call}.json"
+        else:
+            fn = f"{fdir}/{file_api_call}.json"
+
+        with open(fn, 'r') as json_file:
+            content_json = json.load(json_file)
+    except FileNotFoundError:
+        # if not suppress_error:
+        logger.error(f"Not found {fn}")
+        return []
+
+    # logging.debug(f"{fn} keys: {list(json_content.keys())}")
+    # cpobjects = []
+    # for cpobject in content_json['data']:
+    #     cpobjects.append(cpobject['name'])
+    # logger.debug(f"{fn} Objects: {cpobjects}")
+
+    cpobjects = content_json.get('data', [])
+    return cpobjects # load_mgmt_json
 #endregion Management

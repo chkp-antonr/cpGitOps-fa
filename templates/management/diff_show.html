@@ -1,0 +1,44 @@
+{% extends "management/layout.html" %}
+
+{% block content %}
+  <p class="text-xl">Management view</p>
+  <p class="text-lg">Diff.</p>
+
+  <hr class="my-2" />
+  <div>
+
+    {% for diff_item in diff %}
+      <h2 class="mt-2 text-lg font-semibold">{{ diff_item.mgmt }}/{{ diff_item.domain }}</h2>
+      <h3 class="font-bold">{{ diff_item.command }}</h3>
+
+      {% if diff_item.new %}
+        <p class="font-semibold mt-1">New</p>
+        {% for item in diff_item.new %}
+          <p>{{ item }}</p>
+        {% endfor %}
+      {% endif %}
+
+      {% if diff_item.deleted %}
+        <p class="font-semibold mt-1">Deleted</p>
+        {% for item in diff_item.deleted %}
+          <p>{{ item }}</p>
+        {% endfor %}
+      {% endif %}
+
+      {% if diff_item.changed %}
+        <p class="font-semibold mt-1">Changed</p>
+        {% for item in diff_item.changed %}
+          <p>{{ item }}</p>
+        {% endfor %}
+      {% endif %}
+
+
+      {% endfor %}
+  </div>
+
+  <hr class="my-2" />
+
+  <div>
+    {{ content|safe }}
+  </div>
+{% endblock content %}

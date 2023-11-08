@@ -6,23 +6,19 @@
 
   <hr class="my-2"/>
   <div class="">
-    <div class="inline-block mr-2">
+    <div class="inline-block mr-2 align-middle">
       <label for="mgmt_server" class="text-sm leading-none">Select Management server<br/>to refresh its domains:</label>
     </div>
-    <select id="mgmt_server" class="px-2 py-1 mx-2 border-2 shadow-md inline-block">
+    <select id="mgmt_server" class="px-2 py-1 mx-2 border-2 shadow-md inline-block align-middle">
       <option value="">Select server</option>
       {% for server in mgmt_servers %}
       <option value="{{ server }}"
-        {% if mgmt_server %}selected{% endif %}>{{ server }}</option>
+        {% if server == mgmt_server %}selected{% endif %}>{{ server }}</option>
       {% endfor %}
     </select>
-    <button name="update_ssot_dirs" class="button mx-3 w-44" title="Update SSoT directory structure from API"
+    <button name="update_ssot_dirs" class="button mx-3 w-44 inline-block align-middle" title="Update SSoT directory structure from API"
       onclick="btn_click(`?mgmt_server=${document.getElementById('mgmt_server').value}&action=update_ssot_dirs`)">
       SSoT Dir update
-    </button>
-    <button name="fetch_api" class="button mx-3 w-44" title="Fetch objects and packages from API to CURRTEMP"
-      onclick="btn_click(`?mgmt_server=${document.getElementById('mgmt_server').value}&action=fetch_api`)">
-      Fetch from API
     </button>
   </div>
 
@@ -48,6 +44,24 @@
   <hr class="my-2" />
   {{ content|safe }}
   <hr class="my-2" />
+
+  {% if domains %}
+    <div class="inline-block mr-2 align-top">
+      <p><select size="5" name="domain" id="domain" class="rounded border-2 my-1 px-2 py-2">
+        <option disabled class="text-gray-400">Select DMN</option>
+        {% for item in domains %}
+          <option value="{{ item }}"
+          {% if item == domain %}selected{% endif %}>{{ item }}</option>
+        {% endfor %}
+      </select></p>
+    </div>
+    <div class="inline-block mr-2 align-middle">
+      <button name="fetch_api" class="button mx-3 w-44" title="Fetch objects and packages from API to CURRTEMP"
+        onclick="btn_click(`?mgmt_server=${document.getElementById('mgmt_server').value}&action=fetch_api&domain=${document.getElementById('domain').value}`)">
+        Fetch from API
+      </button>
+    </div>
+  {% endif %}
 
   {% if update_ssot_result.dirs_created %}
     <div class="my-2">

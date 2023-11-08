@@ -53,6 +53,7 @@
         const baseUrl = window.location.pathname; // Get the base URL
         // const pathValue = element.value;
         if ( extraQuery ) {
+          console.log(`${baseUrl}${extraQuery}`)
           window.location.href = `${baseUrl}${extraQuery}`;
         }
       };

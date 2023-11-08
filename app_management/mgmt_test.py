@@ -28,7 +28,7 @@ def test_mgmt_show_domains_update_ssot_dirs():
     assert "Domains in SSoT" in response.text
 
 def test_mgmt_show_domains_fetch_api(): # time consuming
-    response = client.get("/management/show_domains/?mgmt_server=mdmPrime&action=fetch_api&dmn=cpGitOps")
+    response = client.get("/management/show_domains/?mgmt_server=mdmPrime&action=fetch_api&domain=cpGitOps")
     assert response.status_code == 200
     # assert "Domains in SSoT" in response.text
 

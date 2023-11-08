@@ -5,12 +5,13 @@ from typing import Dict, List, Tuple, Text
 import yaml
 import json
 from time import sleep
+from deepdiff import DeepDiff
 from fastapi import APIRouter
 import asyncio
 #
 from cpapi import APIClient, APIClientArgs, APIResponse
 from include.cgl import logger
-from include.cpg import settings, mgmt_descr_by_fqdn, mgmt_get_fqdn, MyDumper
+from include.cpg import settings, mgmt_descr_by_fqdn, mgmt_get_fqdn, load_mgmt_json # MyDumper
 from src.schemas import ManagementToLogin, ManagementServerCachedInfo, \
     ListOfManagementServerCachedInfo, ManagementToLogin, ApiStatus, ApiCallRequest
 
@@ -289,50 +290,51 @@ class Mgmt():
                 logger.error(f"Can't write {file_name}: {e}")
         return # fetch_packages_dmn ToDo add ApiResponse
 
-    async def fetch_api_dmn(self, mdm_server:Text, dmn:Text="", message=[""]) -> ApiStatus:
+    async def fetch_api_dmn(self, mgmt_server:Text, domain:Text="", message=[""]) -> ApiStatus:
         """Fetch show-* from API and saves to TEMPCURR
 
         :param Text mdm_server: MDM server fqdn or name
         :param Text dmn: DMN optional (for SMS)
         :return _type_: _description_
         """
-        fqdn = mgmt_get_fqdn(mdm_server)
+        fqdn = mgmt_get_fqdn(mgmt_server)
         client = Mgmt().login( \
-                ManagementToLogin(fqdn=fqdn, dmn=dmn))[1]
+                ManagementToLogin(fqdn=fqdn, dmn=domain))[1]
         if not client:
-            raise Exception(f"fetch_api_dmn: Login failed for {mdm_server}/{dmn}")
+            raise Exception(f"fetch_api_dmn: Login failed for {mgmt_server}/{domain}")
 
         commands = self.enum_mgmt_api_calls_for_ver("1.8") # ToDo version
         # commands = ["show-hosts"]
         for command in commands:
-            logger.debug(f"{command} on DMN {mdm_server}/{dmn}")
-            message[0] = f"<p><i>{command}</i> on {mdm_server}/{dmn}</p>"
+            logger.debug(f"{command} on DMN {mgmt_server}/{domain}")
+            message[0] = f"<p><i>{command}</i> on {mgmt_server}/{domain}</p>"
             await asyncio.sleep(0.5)
             response = client.api_query(command, details_level="full")
             # logger.debug(f"{command} on DMN {mdm_server}/{dmn}\n{strip_res_obj(response)}\n")
 
             try:
                 file_name = f"{settings.DIR_SSOT}/{settings.DIR_MGMT}/" \
-                            f"{fqdn}/{dmn}/{settings.MGMT_DIR_TEMP}/{command}.json"
+                            f"{fqdn}/{domain}/{settings.MGMT_DIR_TEMP}/{command}.json"
                 with open(file_name, "w") as json_file:
                     json_file.write(strip_res_obj(response))
             except Exception as e:
                 logger.error(f"Can't write {file_name}: {e}")
 
         # fetch policies
-        message[0] = f"<p>Fetching packages from {mdm_server}/{dmn}</p>"
+        message[0] = f"<p>Fetching packages from {mgmt_server}/{domain}</p>"
         await asyncio.sleep(0.5)
-        self.fetch_packages_dmn(mdm_server, dmn)
+        self.fetch_packages_dmn(mgmt_server, domain)
 
         result = ApiStatus(success=True, comment="Test OK", status_code=201)
         return result # fetch_api
 
 
-def show_domains(mdm_fqdn_name: str) -> List[str]:
+#region cpf
+def show_domains(mgmt_fqdn_name: str) -> List[str]:
     client = Mgmt().login( \
-            ManagementToLogin(fqdn=mgmt_get_fqdn(mdm_fqdn_name), dmn="System Data"))[1]
+            ManagementToLogin(fqdn=mgmt_get_fqdn(mgmt_fqdn_name), dmn="System Data"))[1]
     if client is None:
-        logger.error(f"Can't connect to 'System Data'@{mdm_fqdn_name}")
+        logger.error(f"Can't connect to 'System Data'@{mgmt_fqdn_name}")
         return []
     else:
         res = client.api_call("show-domains", {
@@ -343,7 +345,78 @@ def show_domains(mdm_fqdn_name: str) -> List[str]:
     # logger.debug(domains)
     return domains # show_domains
 
-#region cpf
+
+async def mgmt_diff_single(mgmt_server:Text, domain:Text="", command:Text="", message=[""]) -> Dict:
+    """Returns
+    {
+        "mgmt": mgmt_server,
+        "domain": domain,
+        "command": command,
+        "deleted": [{uid, name}],
+        "changed": [{}],
+        "new": [{uid, name, ["param_name: old_value -> new_value"]]}],
+    }
+        or None if error
+    """
+
+    logger.info(f'Looking for diff in {mgmt_server}/{domain} {command}')
+    cpobjects_last = load_mgmt_json(mgmt_server, domain, settings.MGMT_DIR_LAST, command)
+    cpobjects_temp = load_mgmt_json(mgmt_server, domain, settings.MGMT_DIR_TEMP, command)
+
+    result_new = []
+    result_deleted = []
+    result_changed = []
+
+    for item_temp in cpobjects_temp:
+        # logger.debug(f"Iterate TEMP: {item_temp['uid']} {item_temp['name']}")
+        item_last = next(
+            (item for item in cpobjects_last if item.get('uid') == item_temp['uid']), None)
+        if item_last == None:
+            logger.warning(f"New {item_temp['uid']} {item_temp['name']}")
+            result_new.append({'uid': item_temp['uid'], 'name': item_temp['name']})
+
+    for item_last in cpobjects_last:
+        # logger.debug(f"Iterate LAST: {item_last['uid']} {item_last['name']}")
+        item_temp = next(
+            (item for item in cpobjects_temp if item.get('uid') == item_last['uid']), None)
+        if item_temp == None:
+            logger.warning(f"Deleted {item_last['uid']} {item_last['name']}")
+            result_deleted.append({'uid': item_last['uid'], 'name': item_last['name']})
+        else: # match found
+            ddiff = DeepDiff(item_last, item_temp, ignore_order=True)
+            if len(ddiff.get('values_changed', {})) > 0:
+                logger.info(f"Diff: {ddiff}")
+                item_changes = []
+                for item, value in ddiff.get('values_changed', {}).items():
+                    # print(re.search(r"root\['(.*?)'\]", item).group(1))
+                    # param_name = re.search(
+                    #     r"\['(?P<param_name>.+?)'\]", item).group("param_name")
+                    param_name = item[4:]
+                    logger.warning(f"{item_last['name']} changed {param_name}, {value}")
+                    item_changes.append(f"{param_name}: {value['old_value']} -> {value['new_value']}")
+
+                result_changed.append({
+                    'uid': item_last['uid'],
+                    'name': item_last['name'],
+                    'changes': item_changes,
+                })
+
+    # print(cpobjects_last)
+    result = {
+        "mgmt": mgmt_server,
+        "domain": domain,
+        "command": command,
+        "deleted": result_deleted,
+        "changed": result_changed,
+        "new": result_new,
+    }
+    logger.debug(result)
+    return result # mgmt_diff_single
+
+#endregion cpf
+
+
+#region cpfAPI
 router = APIRouter(
     prefix="/cpf",
     tags=["CPF"]
@@ -359,6 +432,7 @@ def api_call(request:ApiCallRequest):
     response = client.api_call(request.command, request.payload)
     logger.debug(response)
     return response # api_call
+
 
 @router.get("/update_ssot_mgmt_domains/{mdm_server}",
             description="Update SSoT directory structure for the domain by fqdn or name")
@@ -400,16 +474,16 @@ def update_ssot_mgmt_domains(mdm_server:Text) -> Dict[Text, List[Text]]:
 
 @router.get("/fetch_api_mgmt_domains/{mdm_server}",
             description="Fetch all jsons from API to TEMPCURR from the domain by fqdn or name")
-async def fetch_api_mgmt_domains(mdm_server:Text, dmn=None, message=[""]) -> Dict[Text, List[Text]]:
+async def fetch_api_mgmt_domains(mdm_server:Text, domain="", message=[""]) -> Dict[Text, List[Text]]:
     # Use checkboxes to select domains?
-    if dmn is None:
+    if domain:
+        domain_names = [domain]
+    else:
         domain_names = [domain[0] for domain in show_domains(mdm_server)]
         domain_names.append("Global")
-    else:
-        domain_names = [dmn]
 
-    for dmn in domain_names:
-        await Mgmt().fetch_api_dmn(mdm_server, dmn=dmn, message=message)
+    for domain in domain_names:
+        await Mgmt().fetch_api_dmn(mdm_server, domain=domain, message=message)
 
     message[0] = ""
     result = {
@@ -418,4 +492,43 @@ async def fetch_api_mgmt_domains(mdm_server:Text, dmn=None, message=[""]) -> Dic
     }
     return result # fetch_last_mgmt_domains
 
-#endregion cpf
+
+@router.get("/mgmt_diff/{mgmt_server}",
+            description="Find diff LASTSAVED vs TEMPCURR")
+async def mgmt_diff(mgmt_server:Text, domain_names=[], commands=[], message=[""]): # -> Dict[Text, List[Text]]:
+    """Returns
+    [
+        {
+        "mgmt": mgmt_server,
+        "domain": domain,
+        "command": command,
+        "deleted": [{uid, name}],
+        "changed": [{}],
+        "new": [{uid, name, ["param_name: old_value -> new_value"]]}],
+        },
+    ]
+        or None if error
+    """
+
+
+    # if domains: #
+    #     domain_names = [domains]
+    # else:  # Empty domains List = ALL domains available on mgmt_server
+    #     domain_names = [domain[0] for domain in show_domains(mgmt_server)]
+    #     domain_names.append("Global")
+
+    # if command:
+    #     commands = [command]
+    # else:
+    #     commands = Mgmt().enum_mgmt_api_calls_for_ver()
+    #     # Diretory with policy package
+
+    result = []
+    for domain in domain_names:
+        for command in commands:
+            result.append(await mgmt_diff_single(mgmt_server, domain, command, message=message))
+        # repeat for dirs with packages
+
+    # message[0] = ""
+    return result # fetch_last_mgmt_domains
+#endregion cpfAPI
