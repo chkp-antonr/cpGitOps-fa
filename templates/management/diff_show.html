@@ -5,36 +5,37 @@
   <p class="text-lg">Diff.</p>
 
   <hr class="my-2" />
-  <div>
-
-    {% for diff_item in diff %}
+  {% for diff_item in diff %}
+    <div class="border border-gray-400 mx-0 my-2 px-2 py-1 rounded-md {% if not (diff_item.new or diff_item.deleted or diff_item.changed) %}text-gray-300{% endif %}">
       <h2 class="mt-2 text-lg font-semibold">{{ diff_item.mgmt }}/{{ diff_item.domain }}</h2>
       <h3 class="font-bold">{{ diff_item.command }}</h3>
 
       {% if diff_item.new %}
-        <p class="font-semibold mt-1">New</p>
+        <hr class="border-dotted border-gray-400 mt-1"/>
+        <p class="font-semibold">New</p>
         {% for item in diff_item.new %}
           <p>{{ item }}</p>
         {% endfor %}
       {% endif %}
 
       {% if diff_item.deleted %}
-        <p class="font-semibold mt-1">Deleted</p>
+        <hr class="border-dotted border-gray-400 mt-1" />
+        <p class="font-semibold">Deleted</p>
         {% for item in diff_item.deleted %}
           <p>{{ item }}</p>
         {% endfor %}
       {% endif %}
 
       {% if diff_item.changed %}
-        <p class="font-semibold mt-1">Changed</p>
+        <hr class="border-dotted border-gray-400 mt-1" />
+        <p class="font-semibold">Changed</p>
         {% for item in diff_item.changed %}
           <p>{{ item }}</p>
         {% endfor %}
       {% endif %}
 
-
-      {% endfor %}
-  </div>
+    </div>
+  {% endfor %}
 
   <hr class="my-2" />
 

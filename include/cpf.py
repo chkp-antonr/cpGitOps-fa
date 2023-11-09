@@ -526,6 +526,8 @@ async def mgmt_diff(mgmt_server:Text, domain_names=[], commands=[], message=[""]
     result = []
     for domain in domain_names:
         for command in commands:
+            message[0] = f"{mgmt_server}/{domain} {command}"
+            await asyncio.sleep(0.1)
             result.append(await mgmt_diff_single(mgmt_server, domain, command, message=message))
         # repeat for dirs with packages
 

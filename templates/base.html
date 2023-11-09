@@ -15,6 +15,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const paramName = 'get_status';
 
+        messagesUpdate(2000);
         if (urlParams.has(paramName)) {
           console.log(`The parameter "${paramName}" exists in the query string.`);
           messagesUpdate(1000);
@@ -35,7 +36,7 @@
               statusDiv.innerHTML = ""; // Clear previous status
               statusDiv.style.visibility = "hidden";
               clearInterval(intervalId);
-              window.location.href = baseUrl;
+              // window.location.href = baseUrl;
             } else {
               const formattedData = data.message // .replace(/^"(.*)"$/, '$1');
               console.log(formattedData)
