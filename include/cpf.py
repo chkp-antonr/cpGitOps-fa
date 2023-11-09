@@ -367,6 +367,11 @@ async def mgmt_diff_single(mgmt_server:Text, domain:Text="", command:Text="", me
     result_deleted = []
     result_changed = []
 
+    exclude_paths = [
+        "root['meta-info']['last-modifier']",
+        "root['meta-info']['last-modify-time']"
+    ]
+
     for item_temp in cpobjects_temp:
         # logger.debug(f"Iterate TEMP: {item_temp['uid']} {item_temp['name']}")
         item_last = next(
@@ -383,7 +388,8 @@ async def mgmt_diff_single(mgmt_server:Text, domain:Text="", command:Text="", me
             logger.warning(f"Deleted {item_last['uid']} {item_last['name']}")
             result_deleted.append({'uid': item_last['uid'], 'name': item_last['name']})
         else: # match found
-            ddiff = DeepDiff(item_last, item_temp, ignore_order=True)
+            ddiff = DeepDiff(item_last, item_temp,
+                             ignore_order=True, exclude_paths=exclude_paths)
             if len(ddiff.get('values_changed', {})) > 0:
                 logger.info(f"Diff: {ddiff}")
                 item_changes = []
