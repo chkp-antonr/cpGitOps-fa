@@ -3,6 +3,7 @@ import yaml
 from fastapi import APIRouter, Request, BackgroundTasks, WebSocket, WebSocketException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
+from jinja2 import Template
 import asyncio
 
 from typing import Text, List, Dict
@@ -157,6 +158,8 @@ async def mgmt_show_domains(request: Request, mgmt_server=None, action="", domai
 #         "request": request})
 
 
+
+
 @router.get("/diff/",
             description="Listbox with available file-names (commands show-*) and policy packages")
 async def mgmt_diff(request: Request, mgmt_server="", domain="", command="", action=""):
@@ -221,6 +224,48 @@ async def prepare_list_domains_commands(mgmt_server:Text) -> Dict:
 
 
 async def mgmt_diff(websocket: WebSocket, mgmt_server:Text, domain:Text, command:Text):
+    diff_template = """
+    {% for diff_item in diff %}
+        <div class="border border-gray-400 mx-0 my-2 px-2 py-1 rounded-md {% if not (diff_item.new or diff_item.deleted or diff_item.changed) %}text-gray-300{% endif %}">
+        <h2 class="mt-2 text-lg font-semibold">{{ diff_item.mgmt }}/{{ diff_item.domain }}</h2>
+        <h3 class="font-bold">{{ diff_item.command }}</h3>
+
+        {% if diff_item.new %}
+            <hr class="border-dotted border-gray-400 mt-1"/>
+            <p class="font-semibold">New</p>
+            {% for item in diff_item.new %}
+            <p>{{ item }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if diff_item.deleted %}
+            <hr class="border-dotted border-gray-400 mt-1" />
+            <p class="font-semibold">Deleted</p>
+            {% for item in diff_item.deleted %}
+            <p>{{ item }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if diff_item.changed %}
+            <hr class="border-dotted border-gray-400 mt-1" />
+            <p class="font-semibold">Changed</p>
+            {% for item in diff_item.changed %}
+            <p>{{ item }}</p>
+            {% endfor %}
+        {% endif %}
+
+        </div>
+    {% endfor %}
+    """
+
+    async def diff_display(template="", message:Dict=None, diff:List[Dict]=None):
+        if message is not None:
+            await websocket.send_json(message)
+        if template and (diff is not None):
+            ws_content = Template(template).render(diff=diff)
+            logger.warning(ws_content)
+            await websocket.send_json({'ws_content': ws_content})
+        return # diff_display
 
     if not (domain and command):
         domain_command_list = await prepare_list_domains_commands(mgmt_server)
@@ -236,7 +281,7 @@ async def mgmt_diff(websocket: WebSocket, mgmt_server:Text, domain:Text, command
 
 
     logger.info(f"Find diff for {mgmt_server}/ {diff_domains} {diff_commands}")
-    diff = await cpf.mgmt_diff(mgmt_server, diff_domains, diff_commands, websocket)
+    diff = await cpf.mgmt_diff(mgmt_server, diff_domains, diff_commands, diff_display, diff_template)
     logger.warning(f"\n{diff}")
 
     return diff # mgmt_diff
