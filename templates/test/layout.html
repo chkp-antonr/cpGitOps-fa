@@ -6,7 +6,8 @@ Test | {{ title }}
 
 {% block sidenav %}
   <ul class="px-2 space-y-4 text-gray-200 mt-4">
-    <li><a href="{{ request.app.url_path_for('test_index') }}" class="sidebar_menu_item text-xl">Test</a></li>
+    <li><a href="{{ request.app.url_path_for('tst_index') }}" class="sidebar_menu_item text-xl">Test</a></li>
+    <li><a href="{{ request.app.url_path_for('tst_show_ws') }}" class="sidebar_menu_item text-xl">Show_WS</a></li>
     <li><a href="#" class="sidebar_menu_item"> </a></li>
   </ul>
 {% endblock sidenav %}

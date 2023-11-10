@@ -16,48 +16,111 @@
         <option value="{{ server }}" {% if server == mgmt_server %}selected{% endif %}>{{ server }}</option>
       {% endfor %}
     </select>
+
+    <div id="hiddenChoice" style="visibility: hidden" class="inline-block mx-2 align-top">
+      <div class="inline-block mx-2 align-top">
+        <select size="5" name="domain" id="domain" class="rounded border-2 my-1 px-2 py-2"
+          title="Empty selection = All selected">
+          <option disabled class="text-gray-400">Select DMN</option>
+        </select>
+      </div>
+
+      <div class="inline-block mx-2 align-top">
+          <select size="5" name="command" id="command" class="rounded border-2 my-1 px-2 py-2"
+            title="Empty selection = All selected">
+            <option disabled class="text-gray-400">Command to diff</option>
+          </select>
+      </div>
+
+      <button name="diff" class="button my-1 mx-3 w-44"
+        onclick="sendWSdiff('diff')"
+        title="Find diff between LASTSAVED and CURRTEMP">Find diff</button>
+    </div>
   </div>
 
   <script>
     document.getElementById("mgmt_server").addEventListener('change', function () {
-      const baseUrl = window.location.pathname; // Get the base URL
-      const selectedValue = this.value;
-      if (selectedValue) {
-        const newUrl = `?mgmt_server=${selectedValue}`;
-        window.location.href = newUrl;
-      }
+      sendWSJSON({
+        "action": "get_domains_list",
+        "mgmt_server": this.value
+      })
     });
+
+    ws.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+
+      if (data.hasOwnProperty('action')) {
+        if (data.action === "domains_list") {
+          document.getElementById('hiddenChoice').style.visibility = "visible";
+          const selectDomain = document.getElementById('domain');
+          // Clear existing options
+          selectDomain.length = 1;
+          // Add new options
+          data.domains.forEach(function (domain) {
+            let option = document.createElement('option');
+            option.text = domain;
+            option.value = domain;
+            selectDomain.add(option);
+            }
+          );
+
+          const selectCommand = document.getElementById('command');
+          // Clear existing options
+          selectCommand.length = 1;
+          // Add new options
+          data.commands.forEach(function (command) {
+            let option = document.createElement('option');
+            option.text = command;
+            option.value = command;
+            selectCommand.add(option);
+            }
+          );
+        } // "domains_list"
+      }
+
+      // console.log(`${data} ${baseUrl} ${firstSubPath}`)
+      // Check if status exists
+      if (data.hasOwnProperty('ws_status')) {
+        const statusDiv = document.getElementById('ws_status');
+        if (data.ws_status.length === 0) {
+          // console.log(`Empty ws_status.`)
+          statusDiv.innerHTML = ""; // Clear previous status
+          statusDiv.style.visibility = "hidden";
+        } else {
+          const formattedData = data.ws_status // .replace(/^"(.*)"$/, '$1');
+          // console.log(formattedData)
+          statusDiv.innerHTML = formattedData; // Clear previous status
+          statusDiv.style.visibility = "visible";
+        }
+      }
+
+      // Check if content exists
+      if (data.hasOwnProperty('ws_content')) {
+        const contentDiv = document.getElementById('ws_content');
+        if (data.ws_content.length === 0) {
+          // console.log(`Empty ws_content.`)
+          contentDiv.innerHTML = ""; // Clear previous status
+          // contentDiv.style.visibility = "hidden";
+        } else {
+          const formattedData = data.ws_content // .replace(/^"(.*)"$/, '$1');
+          // console.log(formattedData)
+          contentDiv.innerHTML += formattedData; // Clear previous status
+          // contentDiv.style.visibility = "visible";
+        }
+      }
+    }
+
+    function sendWSdiff(action) {
+        ws.send(JSON.stringify({
+          'action': action,
+          'mgmt_server': document.getElementById("mgmt_server").value,
+          'domain': document.getElementById("domain").value,
+          'command': document.getElementById("command").value,
+        }));
+      }
   </script>
 
   <hr class="my-2" />
-
-  {% if domains %}
-  <div class="inline-block mx-2 align-top">
-    <select size="5" name="domain" id="domain" class="rounded border-2 my-1 px-2 py-2">
-      <option disabled class="text-gray-400">Select DMN</option>
-      {% for item in domains %}
-      <option value="{{ item }}" {% if item == domain %}selected{% endif %}>
-        {{ item }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="inline-block mx-2 align-top">
-    <select size="5" name="command" id="command" class="rounded border-2 my-1 px-2 py-2">
-      <option disabled class="text-gray-400">Command to diff</option>
-      {% for item in commands %}
-        <option value="{{ item }}">{{ item }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <button name="diff" class="button my-1 mx-3 w-44 inline-block align-middle"
-    title="Find diff between LASTSAVED and CURRTEMP"
-    onclick="btn_click(`?mgmt_server=${document.getElementById('mgmt_server').value}&action=diff\
-&domain=${document.getElementById('domain').value}\
-&command=${document.getElementById('command').value}`)">
-    Find diff
-  </button>
-  <hr class="my-2" />
-  {% endif %}
 
   <div>
     {{ content|safe }}

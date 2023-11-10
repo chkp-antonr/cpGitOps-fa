@@ -11,11 +11,27 @@
     <script>
       var intervalId = null;
 
+      // WebSocket
+      var getUrl = window.location;
+      const firstSubPath = `${getUrl.pathname.split('/')[1]}`;
+      const listen = `ws://${getUrl.host}/${firstSubPath}/ws`
+      var ws = new WebSocket(listen);
+
+      function sendWSMessage(msg) {
+        ws.send(msg);
+      }
+
+      function sendWSJSON(data) {
+          ws.send(JSON.stringify(data));
+      }
+
+      // AJAX below. To be removed
+
       function onLoadFunc() {
         const urlParams = new URLSearchParams(window.location.search);
         const paramName = 'get_status';
 
-        messagesUpdate(2000);
+        // ! messagesUpdate(2000);
         if (urlParams.has(paramName)) {
           console.log(`The parameter "${paramName}" exists in the query string.`);
           messagesUpdate(1000);
@@ -74,21 +90,18 @@
       </div>
     </nav>
 
-    {#
-    <div id="status" class="border-b border-gray-500 py-1 px-2 bg-slate-50">
-      <p id="message">Hey</p>
-    </div>
-    #}
-
     <div class="grid grid-cols-6">
       <div id="sidenav" class="bg-gray-700 h-full col-span-1">
         {% block sidenav %}{% endblock sidenav %}
       </div>
       <div class="px-6 py-3 col-span-5">
+        <div id="ws_status" class="mb-2 px-2 py-2 border bg-indigo-50"
+          style="margin-top: -0.75rem; margin-left: -1.5rem; margin-right: -1.5rem; visibility: hidden;"></div>
         <div id="status" class="mb-2 px-2 py-2 border bg-indigo-50"
           style="margin-top: -0.75rem; margin-left: -1.5rem; margin-right: -1.5rem; visibility: hidden;"></div>
         {% block content %}
         {% endblock %}
+        <div id="ws_content"></div>
       </div>
     </div>
 

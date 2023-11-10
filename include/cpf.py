@@ -6,7 +6,8 @@ import yaml
 import json
 from time import sleep
 from deepdiff import DeepDiff
-from fastapi import APIRouter
+from fastapi import APIRouter, WebSocket
+from jinja2 import Template
 import asyncio
 #
 from cpapi import APIClient, APIClientArgs, APIResponse
@@ -346,7 +347,7 @@ def show_domains(mgmt_fqdn_name: str) -> List[str]:
     return domains # show_domains
 
 
-async def mgmt_diff_single(mgmt_server:Text, domain:Text="", command:Text="", message=[""]) -> Dict:
+async def mgmt_diff_single(mgmt_server:Text, domain:Text="", command:Text="", websocket:WebSocket=None) -> Dict:
     """Returns
     {
         "mgmt": mgmt_server,
@@ -499,9 +500,46 @@ async def fetch_api_mgmt_domains(mdm_server:Text, domain="", message=[""]) -> Di
     return result # fetch_last_mgmt_domains
 
 
+
+
+diff_template = """
+  {% for diff_item in diff %}
+    <div class="border border-gray-400 mx-0 my-2 px-2 py-1 rounded-md {% if not (diff_item.new or diff_item.deleted or diff_item.changed) %}text-gray-300{% endif %}">
+      <h2 class="mt-2 text-lg font-semibold">{{ diff_item.mgmt }}/{{ diff_item.domain }}</h2>
+      <h3 class="font-bold">{{ diff_item.command }}</h3>
+
+      {% if diff_item.new %}
+        <hr class="border-dotted border-gray-400 mt-1"/>
+        <p class="font-semibold">New</p>
+        {% for item in diff_item.new %}
+          <p>{{ item }}</p>
+        {% endfor %}
+      {% endif %}
+
+      {% if diff_item.deleted %}
+        <hr class="border-dotted border-gray-400 mt-1" />
+        <p class="font-semibold">Deleted</p>
+        {% for item in diff_item.deleted %}
+          <p>{{ item }}</p>
+        {% endfor %}
+      {% endif %}
+
+      {% if diff_item.changed %}
+        <hr class="border-dotted border-gray-400 mt-1" />
+        <p class="font-semibold">Changed</p>
+        {% for item in diff_item.changed %}
+          <p>{{ item }}</p>
+        {% endfor %}
+      {% endif %}
+
+    </div>
+  {% endfor %}
+"""
+
+
 @router.get("/mgmt_diff/{mgmt_server}",
             description="Find diff LASTSAVED vs TEMPCURR")
-async def mgmt_diff(mgmt_server:Text, domain_names=[], commands=[], message=[""]): # -> Dict[Text, List[Text]]:
+async def mgmt_diff(mgmt_server:Text, domain_names=[], commands=[], websocket:WebSocket=None): # -> Dict[Text, List[Text]]:
     """Returns
     [
         {
@@ -527,16 +565,26 @@ async def mgmt_diff(mgmt_server:Text, domain_names=[], commands=[], message=[""]
     #     commands = [command]
     # else:
     #     commands = Mgmt().enum_mgmt_api_calls_for_ver()
-    #     # Diretory with policy package
+    #     # Directory with policy package
+
+    await websocket.send_json({"ws_status": "", "ws_content": ""})
+    template = Template(diff_template)
 
     result = []
     for domain in domain_names:
+        diff_domain = []
         for command in commands:
-            message[0] = f"{mgmt_server}/{domain} {command}"
+            await websocket.send_json({"ws_status": f"{mgmt_server}/{domain} {command}"})
             await asyncio.sleep(0.1)
-            result.append(await mgmt_diff_single(mgmt_server, domain, command, message=message))
+            diff_domain_command = await mgmt_diff_single(mgmt_server, domain, command, websocket)
+            diff_domain.append(diff_domain_command)
+            result.append(diff_domain_command)
         # repeat for dirs with packages
-
+        ws_content = template.render(diff = diff_domain)
+        logger.warning(ws_content)
+        await websocket.send_json({"ws_content": ws_content})
+        await asyncio.sleep(0.1)
+    await websocket.send_json({"ws_status": ""})
     # message[0] = ""
     return result # fetch_last_mgmt_domains
 #endregion cpfAPI

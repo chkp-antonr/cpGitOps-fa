@@ -6,6 +6,7 @@ pylint
 pytest-env
 pytest-asyncio
 websockets
+sse-starlette
 
 cp-mgmt-api-sdk
 deepdiff[murmur]

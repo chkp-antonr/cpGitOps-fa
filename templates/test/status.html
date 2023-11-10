@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <div id="status"></div>
+    <button onclick="start()">Start</button>
+
+    <script>
+        function start() {
+            var source = new EventSource("/test/status");
+            source.onmessage = function (event) {
+                document.getElementById("status").innerHTML = event.data;
+                if (event.data === "") {
+                    document.getElementById("status").style.display = "none";
+                } else {
+                    document.getElementById("status").style.display = "block";
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,67 @@
+{% extends "management/layout.html" %}
+
+{% block content %}
+<p class="text-xl">Management view</p>
+<p class="text-lg">Diff.</p>
+
+<hr class="my-2" />
+<div class="">
+    <div class="inline-block mr-2 align-middle">
+        <label for="mgmt_server" class="text-sm leading-none">Select Management server<br />to refresh its
+            domains:</label>
+    </div>
+    <select id="mgmt_server" class="px-2 py-1 mx-2 border-2 shadow-md inline-block align-middle">
+        <option value="">Select server</option>
+        {% for server in mgmt_servers %}
+        <option value="{{ server }}" {% if server==mgmt_server %}selected{% endif %}>{{ server }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<script>
+    document.getElementById("mgmt_server").addEventListener('change', function () {
+        // const baseUrl = window.location.pathname; // Get the base URL
+        // const selectedValue = this.value;
+        // if (selectedValue) {
+        //   const newUrl = `?mgmt_server=${selectedValue}`;
+        //   window.location.href = newUrl;
+        // }
+        sendWSJSON({
+            "action": ""
+        })
+    });
+</script>
+
+<hr class="my-2" />
+
+{% if domains %}
+<div class="inline-block mx-2 align-top">
+    <select size="5" name="domain" id="domain" class="rounded border-2 my-1 px-2 py-2">
+        <option disabled class="text-gray-400">Select DMN</option>
+        {% for item in domains %}
+        <option value="{{ item }}" {% if item==domain %}selected{% endif %}>
+            {{ item }}</option>
+        {% endfor %}
+    </select>
+</div>
+<div class="inline-block mx-2 align-top">
+    <select size="5" name="command" id="command" class="rounded border-2 my-1 px-2 py-2">
+        <option disabled class="text-gray-400">Command to diff</option>
+        {% for item in commands %}
+        <option value="{{ item }}">{{ item }}</option>
+        {% endfor %}
+    </select>
+</div>
+<button name="diff" class="button my-1 mx-3 w-44 inline-block align-middle"
+    title="Find diff between LASTSAVED and CURRTEMP">Find diff</button>
+{# onclick="btn_click(`?mgmt_server=${document.getElementById('mgmt_server').value}&action=diff\
+&domain=${document.getElementById('domain').value}\
+&command=${document.getElementById('command').value}`)" #}
+
+<hr class="my-2" />
+{% endif %}
+
+<div>
+    {{ content|safe }}
+</div>
+{% endblock content %}

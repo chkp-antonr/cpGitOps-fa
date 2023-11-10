@@ -1,8 +1,11 @@
+import json
 import yaml
-from fastapi import APIRouter, Request #, Form, Depends
+from fastapi import APIRouter, Request, BackgroundTasks, WebSocket, WebSocketException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import asyncio
+
+from typing import Text, List, Dict
 
 from include import cpg
 from include import cpf
@@ -80,6 +83,80 @@ async def mgmt_show_domains(request: Request, mgmt_server=None, action="", domai
     })
 
 
+# @router.get("/diff/",
+#             description="Listbox with available file-names (commands show-*) and policy packages")
+# async def mgmt_diff(request: Request, mgmt_server="", domain="", command="", action=""):
+#     content = ""
+#     commands = []
+#     packages = []
+#     mgmt_servers = []
+#     domains = []
+
+#     # Provide a list of available management servers
+#     logger.debug("Prepare a list of management servers (in SSoT)")
+#     list_domains = cpg.list_mgmt_domains()
+#     mgmt_servers = [server.descr_file.annotation.name for server in list_domains
+#             if server.descr_file.annotation.kind == "MDM"]
+
+#     if mgmt_server:
+#         # Managing Server is selected
+#         logger.debug(f"Prepare a list of domains (in SSoT) for {mgmt_server}")
+#         try:
+#             if mgmt_server:
+#                 matched = next((server for server in list_domains
+#                                 if server.descr_file.annotation.name == mgmt_server), None)
+#                 if matched:
+#                     domains = [dmn[0] for dmn in cpf.show_domains(mgmt_server)]
+#                     domains.append("Global")
+#                     content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
+#                             f"<p>Domains on MDM: {domains}</p>"
+#         except AssertionError as e:
+#             logger.error(f"diff/show_domains: {e}")
+
+#         commands = cpf.Mgmt().enum_mgmt_api_calls_for_ver()
+
+#         if action == "diff":
+#             if domain:
+#                 diff_domains = [domain]
+#             else:
+#                 diff_domains = domains
+#             if command:
+#                 diff_commands = [command]
+#             else:
+#                 diff_commands = commands
+
+#             logger.info(f"Find diff for {mgmt_server}/ {diff_domains} {diff_commands}")
+#             diff = await cpf.mgmt_diff(mgmt_server, diff_domains, diff_commands, message)
+#             logger.warning(f"\n{diff}")
+#             message = [""]
+#             return templates.TemplateResponse(router.prefix+"/diff_show.html", {
+#                 "title":"Diff show",
+#                 "content": "",
+#                 "diff": diff,
+#                 "request": request})
+#         elif action == "sync_to_lastsaved":
+#             if domain:
+#                 diff_domains = [domain]
+#             else:
+#                 diff_domains = domains
+#             if command:
+#                 diff_commands = [command]
+#             else:
+#                 diff_commands = commands
+
+
+#     return templates.TemplateResponse(router.prefix+"/diff.html", {
+#         "title":"Diff",
+#         "content": content,
+#         "mgmt_servers": mgmt_servers,
+#         "mgmt_server": mgmt_server,
+#         "domains": domains,
+#         "domain": domain,
+#         "commands": commands,
+#         "packages": packages,
+#         "request": request})
+
+
 @router.get("/diff/",
             description="Listbox with available file-names (commands show-*) and policy packages")
 async def mgmt_diff(request: Request, mgmt_server="", domain="", command="", action=""):
@@ -95,44 +172,15 @@ async def mgmt_diff(request: Request, mgmt_server="", domain="", command="", act
     mgmt_servers = [server.descr_file.annotation.name for server in list_domains
             if server.descr_file.annotation.kind == "MDM"]
 
-    if mgmt_server:
-        # Managing Server is selected
-        logger.debug(f"Prepare a list of domains (in SSoT) for {mgmt_server}")
-        try:
-            if mgmt_server:
-                matched = next((server for server in list_domains
-                                if server.descr_file.annotation.name == mgmt_server), None)
-                if matched:
-                    domains = [dmn[0] for dmn in cpf.show_domains(mgmt_server)]
-                    domains.append("Global")
-                    content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
-                            f"<p>Domains on MDM: {domains}</p>"
-        except AssertionError as e:
-            logger.error(f"diff/show_domains: {e}")
-
-        commands = cpf.Mgmt().enum_mgmt_api_calls_for_ver()
-
-        if action == "diff":
-            if domain:
-                diff_domains = [domain]
-            else:
-                diff_domains = domains
-            if command:
-                diff_commands = [command]
-            else:
-                diff_commands = commands
-
-            logger.info(f"Find diff for {mgmt_server}/ {diff_domains} {diff_commands}")
-            diff = await cpf.mgmt_diff(mgmt_server, diff_domains, diff_commands)
-            logger.warning(f"\n{diff}")
-            return templates.TemplateResponse(router.prefix+"/diff_show.html", {
-                "title":"Diff show",
-                "content": "",
-                "diff": diff,
-                "request": request})
-
-
-        #     pass
+#         elif action == "sync_to_lastsaved":
+#             if domain:
+#                 diff_domains = [domain]
+#             else:
+#                 diff_domains = domains
+#             if command:
+#                 diff_commands = [command]
+#             else:
+#                 diff_commands = commands
 
     return templates.TemplateResponse(router.prefix+"/diff.html", {
         "title":"Diff",
@@ -145,12 +193,88 @@ async def mgmt_diff(request: Request, mgmt_server="", domain="", command="", act
         "packages": packages,
         "request": request})
 
-# def details_asset(request, mgmt_server, dmn, asset):
-#     # asset name or uuid
-#     return render(request, "management/details_asset.html", {
-#         "title":"Asset details",
-#         "content": f"<p>Mgmt_server: {mgmt_server}</p><p>DMN {dmn}</p><p>Asset {asset}</p>",
-#         })
+
+async def prepare_list_domains_commands(mgmt_server:Text) -> Dict:
+    logger.debug(f"Prepare a list of domains (in SSoT) for {mgmt_server}")
+    domains = []
+    commands = []
+    list_domains = cpg.list_mgmt_domains()
+    try:
+        if mgmt_server:
+            matched = next((server for server in list_domains
+                            if server.descr_file.annotation.name == mgmt_server), None)
+            if matched:
+                domains = [dmn[0] for dmn in cpf.show_domains(mgmt_server)]
+                domains.append("Global")
+                # content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
+                #         f"<p>Domains on MDM: {domains}</p>"
+    except AssertionError as e:
+        logger.error(f"diff/show_domains: {e}")
+
+    commands = cpf.Mgmt().enum_mgmt_api_calls_for_ver()
+
+    result = {
+        "domains": domains,
+        "commands": commands,
+    }
+    return result # prepare_list_domains_commands
+
+
+async def mgmt_diff(websocket: WebSocket, mgmt_server:Text, domain:Text, command:Text):
+
+    if not (domain and command):
+        domain_command_list = await prepare_list_domains_commands(mgmt_server)
+
+    if domain:
+        diff_domains = [domain]
+    else:
+        diff_domains = domain_command_list['domains']
+    if command:
+        diff_commands = [command]
+    else:
+        diff_commands = domain_command_list['commands']
+
+
+    logger.info(f"Find diff for {mgmt_server}/ {diff_domains} {diff_commands}")
+    diff = await cpf.mgmt_diff(mgmt_server, diff_domains, diff_commands, websocket)
+    logger.warning(f"\n{diff}")
+
+    return diff # mgmt_diff
+
+websockets = []
+
+@router.websocket("/ws")
+async def websocket(websocket: WebSocket):
+    print("websocket")
+    await websocket.accept()
+    websockets.append(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            try:
+                logger.debug(f"WebSocket message received: {data}")
+                data = json.loads(data)
+                result = {}
+                if data.get('action') == "get_domains_list":
+                    # logger.debug("get_domains_list")
+                    result = await prepare_list_domains_commands(data.get('mgmt_server'))
+                    result.update({"action": "domains_list"})
+                elif data.get('action') == "diff":
+                    logger.info(data)
+                    diff = await mgmt_diff(websocket, data['mgmt_server'], data['domain'], data['command'])
+
+                if result:
+                    logger.debug(f"sending ws: {result}")
+                    await websocket.send_json(result)
+
+            except AttributeError as e:
+                logger.error(f"WebSocket message: {data} error: {e}")
+
+            await asyncio.sleep(1)  # Check for updates after every 5 seconds
+    except WebSocketException:
+        websockets.remove(websocket)
+    return # websocket
+
 
 @router.get("/get_status")
 async def test_get_status(request: Request, action:str=""):
