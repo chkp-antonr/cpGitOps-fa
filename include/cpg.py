@@ -4,7 +4,7 @@ import os
 from typing import Dict, List, Text, Union
 import yaml
 import json
-from fastapi import APIRouter
+from fastapi import APIRouter, WebSocket
 
 
 import src.schemas as sch
@@ -25,6 +25,14 @@ class MyDumper(yaml.Dumper):
         return super().increase_indent(flow, False)
         # return super(MyDumper, self).increase_indent(flow, False)
 
+async def ws_send_msg(websocket: WebSocket, ws_status:Text=None, ws_content:Text=None):
+    ws_json = {}
+    if ws_status is not None:
+        ws_json.update({"ws_status": ws_status})
+    if ws_content is not None:
+        ws_json.update({"ws_content": ws_content})
+    await websocket.send_json(ws_json)
+    return # ws_send_msg
 #endregion
 
 

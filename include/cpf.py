@@ -359,7 +359,7 @@ async def mgmt_diff_single(mgmt_server:Text, domain:Text="", command:Text="") ->
         or None if error
     """
 
-    logger.info(f'Looking for diff in {mgmt_server}/{domain} {command}')
+    # logger.info(f'Looking for diff in {mgmt_server}/{domain} {command}')
     cpobjects_last = load_mgmt_json(mgmt_server, domain, settings.MGMT_DIR_LAST, command)
     cpobjects_temp = load_mgmt_json(mgmt_server, domain, settings.MGMT_DIR_TEMP, command)
 
@@ -416,7 +416,8 @@ async def mgmt_diff_single(mgmt_server:Text, domain:Text="", command:Text="") ->
         "changed": result_changed,
         "new": result_new,
     }
-    logger.debug(result)
+    if result_deleted or result_changed or result_new:
+        logger.debug(result)
     return result # mgmt_diff_single
 
 #endregion cpf
@@ -517,19 +518,6 @@ async def mgmt_diff(mgmt_server:Text, domain_names=[], commands=[], callback=Non
         or None if error
     """
 
-
-    # if domains: #
-    #     domain_names = [domains]
-    # else:  # Empty domains List = ALL domains available on mgmt_server
-    #     domain_names = [domain[0] for domain in show_domains(mgmt_server)]
-    #     domain_names.append("Global")
-
-    # if command:
-    #     commands = [command]
-    # else:
-    #     commands = Mgmt().enum_mgmt_api_calls_for_ver()
-    #     # Directory with policy package
-
     await callback(message={"ws_status": "", "ws_content": ""})
 
     result = []
@@ -544,6 +532,5 @@ async def mgmt_diff(mgmt_server:Text, domain_names=[], commands=[], callback=Non
         # repeat for dirs with packages
         await callback(template, diff=diff_domain)
     await callback(message={"ws_status": ""})
-    # message[0] = ""
     return result # fetch_last_mgmt_domains
 #endregion cpfAPI
