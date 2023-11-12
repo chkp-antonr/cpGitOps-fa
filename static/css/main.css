@@ -89,6 +89,12 @@ a.sidebar_menu_item:hover {
     background-color: rgb(17 94 89 / var(--tw-bg-opacity));
 }
 
+.cancel {
+    /* background-color: rgb(245 158 11 / var(--tw-bg-opacity)) !important; */
+    background-color: rgb(253 230 138 / var(--tw-bg-opacity)) !important;
+    color: rgb(180 83 9 / var(--tw-text-opacity)) !important;
+}
+
 .cell {
     padding-left: 1rem; /* 16px */
     padding-right: 1rem;

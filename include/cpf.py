@@ -11,7 +11,7 @@ import asyncio
 #
 from cpapi import APIClient, APIClientArgs, APIResponse
 from include.cgl import logger
-from include.cpg import settings, mgmt_descr_by_fqdn, mgmt_get_fqdn, load_mgmt_json # MyDumper
+from include.cpg import settings, mgmt_descr_by_fqdn, mgmt_get_fqdn, load_mgmt_json, list_mgmt_domains # MyDumper
 from src.schemas import ManagementToLogin, ManagementServerCachedInfo, \
     ListOfManagementServerCachedInfo, ManagementToLogin, ApiStatus, ApiCallRequest
 
@@ -419,6 +419,32 @@ async def mgmt_diff_single(mgmt_server:Text, domain:Text="", command:Text="") ->
     if result_deleted or result_changed or result_new:
         logger.debug(result)
     return result # mgmt_diff_single
+
+
+async def prepare_list_domains_commands(mgmt_server: Text) -> Dict:
+    logger.debug(f"Prepare a list of domains (in SSoT) for {mgmt_server}")
+    domains = []
+    commands = []
+    list_domains = list_mgmt_domains()
+    try:
+        if mgmt_server:
+            matched = next((server for server in list_domains
+                            if server.descr_file.annotation.name == mgmt_server), None)
+            if matched:
+                domains = [dmn[0] for dmn in show_domains(mgmt_server)]
+                domains.append("Global")
+                # content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
+                #         f"<p>Domains on MDM: {domains}</p>"
+    except AssertionError as e:
+        logger.error(f"diff/show_domains: {e}")
+
+    commands = Mgmt().enum_mgmt_api_calls_for_ver()
+
+    result = {
+        "domains": domains,
+        "commands": commands,
+    }
+    return result  # prepare_list_domains_commands
 
 #endregion cpf
 

@@ -7,7 +7,7 @@ Ticket | {{ title }}
 {% block sidenav %}
   <ul class="px-2 space-y-4 text-gray-200 mt-4">
     <li><a href="{{ request.app.url_path_for('index') }}" class="sidebar_menu_item text-xl">Ticket</a></li>
-    <li><a href="{{ request.app.url_path_for('add_host') }}" class="sidebar_menu_item">Add host</a></li>
+    <li><a href="{{ request.app.url_path_for('tkt_add_host') }}" class="sidebar_menu_item">Add host</a></li>
     <li><a href="{{ request.app.url_path_for('index') }}" class="sidebar_menu_item">Add rule</a></li>
   </ul>
 {% endblock sidenav %}

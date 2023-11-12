@@ -1,6 +1,6 @@
 import json
 import yaml
-from fastapi import APIRouter, Request, BackgroundTasks, WebSocket, WebSocketException, WebSocketDisconnect
+from fastapi import APIRouter, Request, WebSocket, WebSocketException, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from jinja2 import Template
@@ -113,35 +113,9 @@ async def mgmt_diff(request: Request, mgmt_server="", domain="", command="", act
         "request": request})
 
 
-async def prepare_list_domains_commands(mgmt_server:Text) -> Dict:
-    logger.debug(f"Prepare a list of domains (in SSoT) for {mgmt_server}")
-    domains = []
-    commands = []
-    list_domains = cpg.list_mgmt_domains()
-    try:
-        if mgmt_server:
-            matched = next((server for server in list_domains
-                            if server.descr_file.annotation.name == mgmt_server), None)
-            if matched:
-                domains = [dmn[0] for dmn in cpf.show_domains(mgmt_server)]
-                domains.append("Global")
-                # content = f"<p>Domains in SSoT: {matched.dmns}</p>" \
-                #         f"<p>Domains on MDM: {domains}</p>"
-    except AssertionError as e:
-        logger.error(f"diff/show_domains: {e}")
-
-    commands = cpf.Mgmt().enum_mgmt_api_calls_for_ver()
-
-    result = {
-        "domains": domains,
-        "commands": commands,
-    }
-    return result # prepare_list_domains_commands
-
-
 async def expand_domain_command(mgmt_server:Text, domain:Text, command:Text):
     if not (domain and command):
-        domain_command_list = await prepare_list_domains_commands(mgmt_server)
+        domain_command_list = await cpf.prepare_list_domains_commands(mgmt_server)
     if domain:
         diff_domains = [domain]
     else:
@@ -260,7 +234,7 @@ async def websocket(websocket: WebSocket):
     return # websocket
 
 
-@router.get("/get_status")
-async def test_get_status(request: Request, action:str=""):
-    # logger.debug(message[0])
-    return { "message": message[0] }
+# @router.get("/get_status")
+# async def test_get_status(request: Request, action:str=""):
+#     # logger.debug(message[0])
+#     return { "message": message[0] }

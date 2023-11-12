@@ -10,6 +10,7 @@ class Base(BaseSettings):
     DIR_SSOT: str = "../SSoT"
     DIR_GW: str = "Gateways"
     DIR_MGMT: str = "Management"
+    DIR_UPD: str = DIR_SSOT + "/UPD"
 
     FN_DESCR: str = "_descr_.yaml"
 

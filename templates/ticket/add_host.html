@@ -3,29 +3,75 @@
 {% block content %}
   <h1 class="mb-6 text-3xl text">Add host</h1>
 
-    <form method="post" action=".">
-        <div>
-          {% for field in form %}
-            <div class="form-group">
-              <p class="inline-block text-sm">{{field.label_tag}}</p>
-              {% if field.errors%}
-                {% for error in field.errors %}
-                  <div class="error_in_form">
-                      {{error}}
-                  </div>
-                {% endfor %}
-              {% endif %}
-              <div>{{field}}</div>
-            </div>
+    <form method="post">
+      <div class="bg-red-200" id="form_error"></div>
+      <p><select id="mgmt_server" name="mgmt_server" class="px-2 py-1 mx-2 my-2 border-2 shadow-md align-middle clear-both">
+          <option value="">Select server</option>
+          {% for server in mgmt_servers %}
+            <option value="{{ server }}">{{ server }}</option>
           {% endfor %}
+        </select>
+      </p>
+
+      <div id="hiddenChoice" style="visibility: hidden" class="inline-block mx-2 align-top">
+        <p><select multiple required size="5" name="domains" id="domains" class="rounded border-2 my-1 px-2 py-2"
+            title="Empty selection = All selected">
+            <option disabled class="text-gray-400">Select DMN</option>
+          </select>
+        </p>
+
+        <p class="my-2"><label for="name">Host name:</label><br>
+          <input type="text" required id="name" name="name" class="border">
+        </p>
+
+        <p class="my-2"><label for="name">IPv4:</label><br>
+          <input type="text" required id="ipv4-address" name="ipv4_address" class="border">
+        </p>
+
+        <p><select id="color" name="color" class="px-2 py-1 my-2 border-2 shadow-md align-middle clear-both">
+            <option value="blue">blue</option>
+            <option value="green">green</option>
+            <option value="orchid">orchid</option>
+            <option value="cyan">cyan</option>
+          </select>
+        </p>
+
+        <div class="my-2">
+          <button name="btn" id="btn-add_host" value="btn-add_host" class="button w-44">Submit form</button>
+          <button name="btn" id="btn-cancel" value="btn-cancel" class="button w-44 cancel">Cancel</button>
         </div>
-
-        {% if form.non_field_errors %}
-            <div class="error_in_form">
-                {{ form.non_field_errors }}
-            </div>
-        {% endif %}
-
-        <button name="add-host" class="py-1 px-4 text-lg bg-teal-600 hover:bg-teal-800 rounded-xl text-white">Submit</button>
+      </div>
     </form>
+
+
+<script>
+  document.getElementById("mgmt_server").addEventListener('change', function () {
+    sendWSJSON({
+      "action": "get_domains_list",
+      "mgmt_server": this.value
+    })
+  });
+
+  ws.onmessage = function (event) {
+    const data = JSON.parse(event.data);
+    ws_update_status_content(data);
+
+    if (data.hasOwnProperty('action')) {
+      if (data.action === "domains_list") {
+        document.getElementById('hiddenChoice').style.visibility = "visible";
+        const selectDomain = document.getElementById('domains');
+        // Clear existing options
+        selectDomain.length = 1;
+        // Add new options
+        data.domains.forEach(function (domain) {
+          let option = document.createElement('option');
+          option.text = domain;
+          option.value = domain;
+          selectDomain.add(option);
+        })
+      }; // "domains_list"
+    }; // if action
+  }
+</script>
+
 {% endblock content %}

@@ -92,3 +92,32 @@ class ApiStatus(BaseModel):
     comment: str = ""
     status_code: int = 444 # default error
 #endregion Etc
+
+#region UpdateFiles
+
+# annotations:
+#     kind: hosts # optional, by name
+# mgmt:
+#   - {{ data['mgmt_server'] }}
+#     dmn:
+#       - {{ data['domain'] }}
+# objects:
+#   - name: {{ data['name'] }}
+#     ipv4-address: {{ data['ipv4_address'] }}
+#     color: {{ data['color'] }}
+
+class Upd_Host(BaseModel):
+    name: str
+    ipv4_address: IPvAnyAddress
+    color: str = "blue"
+
+class Upd_MGMT(BaseModel):
+    name: str
+    dmn: List[str] = []
+
+class Upd_AddHost(BaseModel):
+    kind: str = 'hosts'
+    mgmt: List[Upd_MGMT] = []
+    objects: List[Upd_Host]
+
+#endregion UpdateFile

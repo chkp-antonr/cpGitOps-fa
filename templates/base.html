@@ -25,6 +25,40 @@
           ws.send(JSON.stringify(data));
       }
 
+      function ws_update_status_content(data) {
+        // console.log(`${data} ${baseUrl} ${firstSubPath}`)
+        // Check if status exists
+        if (data.hasOwnProperty('ws_status')) {
+          const statusDiv = document.getElementById('ws_status');
+          if (data.ws_status.length === 0) {
+            // console.log(`Empty ws_status.`)
+            statusDiv.innerHTML = ""; // Clear previous status
+            statusDiv.style.visibility = "hidden";
+          } else {
+            const formattedData = data.ws_status // .replace(/^"(.*)"$/, '$1');
+            // console.log(formattedData)
+            statusDiv.innerHTML = formattedData; // Clear previous status
+            statusDiv.style.visibility = "visible";
+          }
+        }
+
+        // Check if content exists
+        if (data.hasOwnProperty('ws_content')) {
+          const contentDiv = document.getElementById('ws_content');
+          if (data.ws_content.length === 0) {
+            // console.log(`Empty ws_content.`)
+            contentDiv.innerHTML = ""; // Clear previous status
+            // contentDiv.style.visibility = "hidden";
+          } else {
+            const formattedData = data.ws_content // .replace(/^"(.*)"$/, '$1');
+            // console.log(formattedData)
+            contentDiv.innerHTML += formattedData; // Clear previous status
+            // contentDiv.style.visibility = "visible";
+          }
+        }
+      } // ws_update_status_content(data)
+
+
       // AJAX below. To be removed
 
       function onLoadFunc() {

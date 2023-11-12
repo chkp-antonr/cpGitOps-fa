@@ -5,7 +5,8 @@ from typing import Dict, List, Text, Union
 import yaml
 import json
 from fastapi import APIRouter, WebSocket
-
+from pydantic import IPvAnyAddress
+from ipaddress import IPv4Address
 
 import src.schemas as sch
 from include.cgl import settings, logger
@@ -15,6 +16,13 @@ router = APIRouter(
     prefix="/cpg",
     tags=["CPG"]
 )
+
+
+# Avoid dumping ipv4_address: !!python/object/apply:ipaddress.IPv4Address
+def ipv4_representer(dumper: yaml.Dumper, data: IPv4Address):
+    return dumper.represent_str(f"{data}")
+yaml.add_representer(IPv4Address, ipv4_representer)
+
 
 class MyDumper(yaml.Dumper):
     ''' Adds ident before "-"
